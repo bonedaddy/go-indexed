@@ -53,17 +53,13 @@ func TestBClient(t *testing.T) {
 		})
 
 		t.Run("DEFI5_MCAP_Controller", func(t *testing.T) {
-			mcntrl, err := client.MCAPControllerAt(defi5)
+			_, err := client.MCAPControllerAt(defi5)
 			require.NoError(t, err)
-			tokens, err := defi5.GetCurrentTokens(nil)
+		})
+		t.Run("DEFI5_UNISWAP_ORACLE", func(t *testing.T) {
+			addr, err := client.OracleFor(defi5)
 			require.NoError(t, err)
-			for _, token := range tokens {
-				// Compute the average market cap of a token in WETH. Queries the average amount of ether that the total supply is worth using the recent moving average.
-				wethBal, _ := mcntrl.ComputeAverageMarketCap(nil, token)
-				// require.NoError(t, err)
-				t.Logf("token %s, weth balance %s", token, wethBal)
-			}
-
+			t.Log("defi5 uniswap oracle address: ", addr)
 		})
 	})
 

@@ -45,6 +45,15 @@ func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontrolle
 	return mcapscontroller.NewMcapscontroller(cntrl, c.ec)
 }
 
+// OracleFor returns the uniswap v2 oracle address for tne given index pool
+func (c *Client) OracleFor(ip IndexPool) (common.Address, error) {
+	mcaps, err := c.MCAPControllerAt(ip)
+	if err != nil {
+		return common.Address{}, err
+	}
+	return mcaps.Oracle(nil)
+}
+
 // StakingAt returns a staking rewards bindings at the given address
 func (c *Client) StakingAt(addr common.Address) (*stakingbindings.Stakingbindings, error) {
 	return stakingbindings.NewStakingbindings(DEFI5StakingAddress, c.ec)
