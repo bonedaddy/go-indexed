@@ -1,3 +1,6 @@
 [submodule "indexed-js"]
 	path = indexed-js
 	url = https://github.com/indexed-finance/indexed.js.git
+[submodule "indexed-core"]
+	path = indexed-core
+	url = https://github.com/indexed-finance/indexed-core.git
