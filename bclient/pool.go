@@ -13,6 +13,7 @@ import (
 // See https://docs.indexed.finance/indexed-finance-docs/smart-contracts/pool#indexpool for more information
 type IndexPoolRead interface {
 	IsPublicSwap(opts *bind.CallOpts) (bool, error)
+	GetController(opts *bind.CallOpts) (common.Address, error)
 	GetCurrentTokens(opts *bind.CallOpts) ([]common.Address, error)
 	GetNumTokens(opts *bind.CallOpts) (*big.Int, error)
 	GetMaxPoolTokens(opts *bind.CallOpts) (*big.Int, error)

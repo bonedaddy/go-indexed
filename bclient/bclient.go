@@ -1,6 +1,7 @@
 package bclient
 
 import (
+	mcapscontroller "github.com/bonedaddy/go-indexed/bindings/marketcap_sqrt_controller"
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
 	"github.com/ethereum/go-ethereum/common"
@@ -33,6 +34,15 @@ func NewClient(url string) (*Client, error) {
 // DEFI5 returns a DEFI5 contract binding
 func (c *Client) DEFI5() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(DEFI5TokenAddress, c.ec)
+}
+
+// MCAPControllerAt returns the marketcap square root controller bindings for an IndexPool
+func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontroller, error) {
+	cntrl, err := ip.GetController(nil)
+	if err != nil {
+		return nil, err
+	}
+	return mcapscontroller.NewMcapscontroller(cntrl, c.ec)
 }
 
 // StakingAt returns a staking rewards bindings at the given address

@@ -34,9 +34,13 @@ func TestBClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Log("decimals: ", dec)
 
-		l, _ := BalanceOfDecimal(defi5, myAddress)
+		cont, err := defi5.GetController(nil)
+		require.NoError(t, err)
+		t.Log("controller: ", cont)
 
+		l, _ := BalanceOfDecimal(defi5, myAddress)
 		t.Log("balance decimal: ", l)
+
 		t.Run("DEFI5_Staking", func(t *testing.T) {
 			stake, err := client.StakingAt(DEFI5StakingAddress)
 			require.NoError(t, err)
@@ -46,6 +50,20 @@ func TestBClient(t *testing.T) {
 			earned, err := StakeEarned(stake, defi5, myAddress)
 			require.NoError(t, err)
 			t.Log("tokens earned: ", earned)
+		})
+
+		t.Run("DEFI5_MCAP_Controller", func(t *testing.T) {
+			mcntrl, err := client.MCAPControllerAt(defi5)
+			require.NoError(t, err)
+			tokens, err := defi5.GetCurrentTokens(nil)
+			require.NoError(t, err)
+			for _, token := range tokens {
+				// Compute the average market cap of a token in WETH. Queries the average amount of ether that the total supply is worth using the recent moving average.
+				wethBal, _ := mcntrl.ComputeAverageMarketCap(nil, token)
+				// require.NoError(t, err)
+				t.Logf("token %s, weth balance %s", token, wethBal)
+			}
+
 		})
 	})
 
