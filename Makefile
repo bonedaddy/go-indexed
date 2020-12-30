@@ -1,3 +1,7 @@
+.PHONY: cli
+cli:
+	go build -o gondx ./cmd/gondx
+
 .PHONY: all
 all: copy-abi gen-bindings
 
