@@ -17,6 +17,8 @@ var (
 	INFURA_WS_URL       = "wss://mainnet.infura.io/ws/v3/"
 	INFURA_HTTP_URL     = "https://mainnet.infura.io/v3/"
 	OneEthInWei         = big.NewInt(1000000000000000000)
+	// index pools
+	IndexPools = map[string]common.Address{"defi5": DEFI5TokenAddress}
 )
 
 // DEFI5 is the DEFI Top 5 IndexPool
