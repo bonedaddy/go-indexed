@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -57,11 +59,19 @@ func main() {
 					Name:  "balance-of",
 					Usage: "returns decimal amount of pool tokens held by address",
 					Action: func(c *cli.Context) error {
-						defi5, err := bc.DEFI5()
-						if err != nil {
-							return err
+						var (
+							ip  bclient.IndexPool
+							err error
+						)
+						switch c.String("pool.name") {
+						case "defi5":
+							ip, err = bc.DEFI5()
+						case "cc10":
+							ip, err = bc.CC10()
+						default:
+							return errors.New("unsupported index pool")
 						}
-						bal, err := bclient.BalanceOfDecimal(defi5, common.HexToAddress(c.String("eth.address")))
+						bal, err := bclient.BalanceOfDecimal(ip, common.HexToAddress(c.String("eth.address")))
 						if err != nil {
 							return err
 						}
@@ -80,6 +90,6 @@ func main() {
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
