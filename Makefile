@@ -10,7 +10,7 @@ gen-bindings:
 	if [ ! -d bindings/pair ]; then mkdir bindings/pair ; fi
 	if [ ! -d bindings/staking_rewards ]; then mkdir bindings/staking_rewards ; fi
 	if [ ! -d bindings/uniswapv2_oracle ]; then mkdir bindings/uniswapv2_oracle ; fi
-	abigen --pkg poolbindings --out bindings/pool/bindings.go
-	abigen --pkg pairbindings --out bindings/pair/bindings.go
-	abigen --pkg stakingbindings --out bindings/staking_rewards/bindings.go
-	abigen --pkg uv2oraclebindings --out bindings/uniswapv2_oracle/bindings.go
+	abigen --abi abi/IPool.json --pkg poolbindings --out bindings/pool/bindings.go
+	abigen --abi abi/Pair.json --pkg pairbindings --out bindings/pair/bindings.go
+	abigen --abi abi/StakingRewards.json --pkg stakingbindings --out bindings/staking_rewards/bindings.go
+	abigen --abi abi/IIndexedUniswapV2Oracle.json --pkg uv2oraclebindings --out bindings/uniswapv2_oracle/bindings.go
