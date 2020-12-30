@@ -2,6 +2,8 @@ package bclient
 
 import (
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
+	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -31,4 +33,9 @@ func NewClient(url string) (*Client, error) {
 // DEFI5 returns a DEFI5 contract binding
 func (c *Client) DEFI5() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(DEFI5TokenAddress, c.ec)
+}
+
+// StakingAt returns a staking rewards bindings at the given address
+func (c *Client) StakingAt(addr common.Address) (*stakingbindings.Stakingbindings, error) {
+	return stakingbindings.NewStakingbindings(DEFI5StakingAddress, c.ec)
 }

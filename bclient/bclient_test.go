@@ -35,7 +35,18 @@ func TestBClient(t *testing.T) {
 		t.Log("decimals: ", dec)
 
 		l, _ := BalanceOfDecimal(defi5, myAddress)
+
 		t.Log("balance decimal: ", l)
+		t.Run("DEFI5_Staking", func(t *testing.T) {
+			stake, err := client.StakingAt(DEFI5StakingAddress)
+			require.NoError(t, err)
+			bal, err := StakeBalanceOf(stake, defi5, myAddress)
+			require.NoError(t, err)
+			t.Log("tokens staked: ", bal)
+			earned, err := StakeEarned(stake, defi5, myAddress)
+			require.NoError(t, err)
+			t.Log("tokens earned: ", earned)
+		})
 	})
 
 }
