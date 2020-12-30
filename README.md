@@ -1,6 +1,7 @@
 # go-indexed
 
-Golang library for Indexed Finance [https://indexed.finance/], and is essentially a port of indexed.js but for Golang.
+
+`go-indexed` is a library interacting [Indexed Finance](https://indexed.finance) smart contracts.
 
 # Development
 

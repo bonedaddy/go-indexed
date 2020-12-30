@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+// Client wraps ethclient and provides helper functions for interacting with the indexed finance smart contracts
 type Client struct {
 	ec *ethclient.Client
 }
@@ -16,13 +17,14 @@ type Client struct {
 func NewInfuraClient(token string, websockets bool) (*Client, error) {
 	var url string
 	if websockets {
-		url = INFURA_WS_URL + token
+		url = InfuraWSURL + token
 	} else {
-		url = INFURA_HTTP_URL + token
+		url = InfuraHTTPURL + token
 	}
 	return NewClient(url)
 }
 
+// NewClient returns an eth client connected to an RPC
 func NewClient(url string) (*Client, error) {
 	ec, err := ethclient.Dial(url)
 	if err != nil {

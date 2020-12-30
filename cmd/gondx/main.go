@@ -27,7 +27,7 @@ func main() {
 		&cli.StringFlag{
 			Name:  "eth.rpc",
 			Usage: "specifies the ethereum RPC endpoint",
-			Value: bclient.INFURA_HTTP_URL,
+			Value: bclient.InfuraHTTPURL,
 		},
 		&cli.StringFlag{
 			Name:  "eth.address",
