@@ -12,6 +12,7 @@ import (
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
 	uv2oraclebindings "github.com/bonedaddy/go-indexed/bindings/uniswapv2_oracle"
+	"github.com/bonedaddy/go-indexed/uniswap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -19,6 +20,7 @@ import (
 // Client wraps ethclient and provides helper functions for interacting with the indexed finance smart contracts
 type Client struct {
 	ec *ethclient.Client
+	uc *uniswap.Client
 }
 
 // NewInfuraClient returns an eth client connected to infura
@@ -38,7 +40,7 @@ func NewClient(url string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{ec}, nil
+	return &Client{ec, uniswap.NewClient(ec)}, nil
 }
 
 // CurrentBlock returns the current block known by the ethereum client
@@ -121,6 +123,9 @@ func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) 
 	}
 	return out, nil
 }
+
+// Uniswap returns a uniswap client helper
+func (c *Client) Uniswap() *uniswap.Client { return c.uc }
 
 func guessTokenName(address string) string {
 	if address == "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2" {

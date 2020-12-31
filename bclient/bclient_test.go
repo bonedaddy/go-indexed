@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
@@ -70,6 +71,34 @@ func TestBClient(t *testing.T) {
 				price, err := orc.ComputeAverageTokenPrice(nil, addr, big.NewInt(0), big.NewInt(36288000)) // price between 0 seconds and 7 days
 				require.NoError(t, err)
 				t.Logf("token %s (%s) average eth price %s", addr, name, price.X)
+			}
+		})
+		t.Run("Uniswap", func(t *testing.T) {
+			t.Log("NDX-ETH uniswap pair address: ", client.NdxEthPairAddress())
+			t.Log("DEFI5-ETH uniswap pair address: ", client.Defi5EthPairAddress())
+			t.Log("CC10-ETH uniswap pair address: ", client.Cc10EthPairAddress())
+			var args = map[string]bool{
+				"ndx-eth":    false,
+				"eth-ndx":    false,
+				"ndxx-eth":   true,
+				"cc10-eth":   false,
+				"eth-cc10":   false,
+				"ethh-cc10":  true,
+				"defi5-eth":  false,
+				"eth-defi5":  false,
+				"deffi5-eth": true,
+			}
+			for name, wantErr := range args {
+				t.Run(name, func(t *testing.T) {
+					amt, err := client.ExchangeAmount(utils.ToWei(10.0, 18), name) // get amount for swaping
+					if (err != nil) != wantErr {
+						t.Errorf("%s wantErr %v", name, wantErr)
+					}
+					if wantErr {
+						return
+					}
+					t.Logf("swapping 10 %s costs: %s", name, amt)
+				})
 			}
 		})
 	})
