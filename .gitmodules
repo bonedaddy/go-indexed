@@ -4,3 +4,6 @@
 [submodule "indexed-core"]
 	path = indexed-core
 	url = https://github.com/indexed-finance/indexed-core.git
+[submodule "indexed-uv2oracle"]
+	path = indexed-uv2oracle
+	url = https://github.com/indexed-finance/uniswap-v2-oracle.git
