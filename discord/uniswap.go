@@ -2,7 +2,6 @@ package discord
 
 import (
 	"fmt"
-	"math/big"
 	"strconv"
 
 	"github.com/bonedaddy/go-indexed/utils"
@@ -24,23 +23,24 @@ func (c *Client) handleUniswap(s *discordgo.Session, m *discordgo.MessageCreate,
 		return
 	case "exchange-amount":
 		// 0    1       2               3      4
-		// !ndx uniswap exchange-amount <pair> <amount>
+		// !ndx uniswap exchange-amount <pair> <amount-float>
 		if len(args) < 5 {
 			c.s.ChannelMessageSend(m.ChannelID, "invalid invocation of !ndx uniswap exchange-amount")
 			return
 		}
-		amt, err := strconv.Atoi(args[4])
+		amtF, err := strconv.ParseFloat(args[4], 64)
 		if err != nil {
 			c.s.ChannelMessageSend(m.ChannelID, "invalid invocation of !ndx uniswap exchange-amount")
 			return
 		}
-		exchAmt, err := c.bc.ExchangeAmount(big.NewInt(int64(amt)), args[3])
+		amt := utils.ToWei(amtF, c.bc.PairDecimals(args[3]))
+		exchAmt, err := c.bc.ExchangeAmount(amt, args[3])
 		if err != nil {
 			c.s.ChannelMessageSend(m.ChannelID, "failed to get exchange amount: "+err.Error())
 			return
 		}
 		c.s.ChannelMessageSend(m.ChannelID,
-			fmt.Sprintf("swapping %v with pair %s will yield: %s", amt, args[3], utils.ToDecimal(exchAmt, c.bc.PairDecimals(args[3]))),
+			fmt.Sprintf("swapping %v with pair %s will yield: %s", amtF, args[3], utils.ToDecimal(exchAmt, c.bc.PairDecimals(args[3]))),
 		)
 	}
 }
