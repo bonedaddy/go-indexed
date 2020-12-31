@@ -1,7 +1,6 @@
 package discord
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -13,18 +12,7 @@ import (
 func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	// 0    1           2
 	// !ndx pool-tokens <pool-name>
-	var (
-		ip  bclient.IndexPool
-		err error
-	)
-	switch args[2] {
-	case "defi5":
-		ip, err = c.bc.DEFI5()
-	case "cc10":
-		ip, err = c.bc.CC10()
-	default:
-		err = errors.New("invalid pool")
-	}
+	ip, err := c.getIndexPool(args[2])
 	if err != nil {
 		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
 		if err != nil {
@@ -50,16 +38,8 @@ func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, ar
 func (c *Client) poolBalance(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	// 0    1            2      3
 	// !ndx pool-balance <pool> <account>
-	var (
-		ip  bclient.IndexPool
-		err error
-	)
-	switch args[2] {
-	case "defi5":
-		ip, err = c.bc.DEFI5()
-	case "cc10":
-		ip, err = c.bc.CC10()
-	default:
+	ip, err := c.getIndexPool(args[2])
+	if err != nil {
 		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
 		if err != nil {
 			log.Println("failed to send channel message")

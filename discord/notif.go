@@ -42,10 +42,6 @@ func (c *Client) handleNotif(s *discordgo.Session, m *discordgo.MessageCreate, a
 				c.s.ChannelMessageSend(m.ChannelID, "invalid invocation of notify stake-balance command")
 				return
 			}
-			var newArgs []string
-			newArgs = append(newArgs,
-				args[0], "staking-earned", args[3], args[4],
-			)
 			ip, err := c.getIndexPool(args[3])
 			if err != nil {
 				c.s.ChannelMessageSend(m.ChannelID, err.Error())
