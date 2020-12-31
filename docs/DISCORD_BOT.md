@@ -33,6 +33,16 @@ Existing `<command>`s:
 * `exchange-amount`
   * Returns the amount of tokens returned in exchange for the specified amount
 
+Every uniswap related commands requires you to specify a "pair", each pair has two ways of being specified, with each method specifying a swap direction. For example `eth-defi5` is for the ETH/DEFI5 uniswap pair. When the previous is written as `defi5-eth` this also refers to the ETH/DEFI5 uniswap pair.  The difference is that in commands such as `exchange-amount` when writing `eth-defi5` you are specifying a swap in the direction of `ETH -> DEFI5`, and when writing `defi5-eth` you are a specifying a swap in the direction of `DEFI5 ->ETH`.
+
+One way to think of this is that the left side of the dash refers to `token0` and the right side of the dash refers to `token1`. This means that in `defi5-eth`, `defi5` is `token0` and `eth` is `token1`.
+
+Current accepted uniswap pairs are:
+
+* `eth-defi5`, `defi5-eth`
+* `eth-cc10`, `cc10-eth`
+* `eh-ndx`, `ndx-eth`
+
 ### reserves
 
 TODO
@@ -44,6 +54,9 @@ Command syntax: `!ndx uniswap exchange-amount <pair> <amount-float>`
 `<pair>` Indicates a given pair, or more specifically the swap direction. If you were to specify `eth-defi5` you would be looking up the amount of DEFI5 tokens you would get in exchange for `<amount-float> of ETH`.
 * `<amount-float>` is the amount of tokens to swap in decimal/float
   * NDXBot will do its best to appropriately handle conversion from decimal/float into whatever decimal value the tokens use. If you find erroneous values please submit an issue.
+
+
+For example if you wanted to get the amount of DEFI5 tokens you would receive in exchange for 0.1 ETH you would write `!ndx uniswap exchange-amount eth-defi5 0.1`.
 
 ## pool-tokens
 
