@@ -7,3 +7,6 @@
 [submodule "indexed-uv2oracle"]
 	path = indexed-uv2oracle
 	url = https://github.com/indexed-finance/uniswap-v2-oracle.git
+[submodule "uniswap-v2-core"]
+	path = uniswap-v2-core
+	url = https://github.com/Uniswap/uniswap-v2-core.git
