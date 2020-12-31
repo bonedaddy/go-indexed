@@ -43,3 +43,23 @@ func (c *Client) ExchangeAmount(amount *big.Int, pair string) (*big.Int, error) 
 		return nil, errors.New("unsupported pair")
 	}
 }
+
+// PairDecimals returns the decimals for the corresponding token pair
+func (c *Client) PairDecimals(pair string) int {
+	switch strings.ToLower(pair) {
+	case "ndx-eth":
+		return 18
+	case "eth-ndx":
+		return 18
+	case "cc10-eth":
+		return 18
+	case "eth-cc10":
+		return 18
+	case "defi5-eth":
+		return 18
+	case "eth-defi5":
+		return 18
+	default:
+		return 0
+	}
+}
