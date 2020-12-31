@@ -15,6 +15,7 @@ var (
 	helpEmbed *discordgo.MessageEmbed
 )
 
+// Client wraps bclient and discordgo to provide a discord bot for indexed finance
 type Client struct {
 	token string
 	s     *discordgo.Session
@@ -41,6 +42,7 @@ func (c *Client) Close() error {
 	return c.s.Close()
 }
 
+// handleCommand processes incoming messages from discord and determines what to do with them
 func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	if len(args) == 1 && args[0] == "!ndx" {
 		c.sendHelp(s, m)
@@ -50,10 +52,13 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 		switch args[1] {
 		case "pool-balance":
 			c.poolBalance(s, m, args)
+			return
 		case "stake-earned":
 			c.stakeEarned(s, m, args)
+			return
 		}
 	}
+	c.s.ChannelMessageSend(m.ChannelID, "invalid command invocation")
 }
 
 func (c *Client) stakeEarned(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
