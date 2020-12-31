@@ -1,15 +1,12 @@
 package discord
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/bonedaddy/go-indexed/bclient"
-	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
 	"github.com/bwmarrin/discordgo"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -49,6 +46,12 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 		c.sendHelp(s, m)
 		return
 	}
+	if len(args) >= 2 {
+		if args[1] == "notify" {
+			c.handleNotif(s, m, args)
+			return
+		}
+	}
 	if len(args) > 2 {
 		switch args[1] {
 		case "pool-tokens":
@@ -67,118 +70,6 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 		}
 	}
 	c.s.ChannelMessageSend(m.ChannelID, "invalid command invocation")
-}
-
-func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	// 0    1           2
-	// !ndx pool-tokens <pool-name>
-	var (
-		ip  bclient.IndexPool
-		err error
-	)
-	switch args[2] {
-	case "defi5":
-		ip, err = c.bc.DEFI5()
-	case "cc10":
-		ip, err = c.bc.CC10()
-	default:
-		err = errors.New("invalid pool")
-	}
-	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
-		return
-	}
-	tokens, err := c.bc.PoolTokensFor(ip)
-	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "failed to lookup current tokens")
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
-		return
-	}
-	msg := fmt.Sprintf("current tokens in pool %s\n", args[2])
-	for name, addr := range tokens {
-		msg += fmt.Sprintf("%s (%s)\n", name, addr)
-	}
-	c.s.ChannelMessageSend(m.ChannelID, msg)
-}
-
-func (c *Client) stakeEarned(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	// 0    1              2            3
-	// !ndx staking-earned <stake-type> <account>
-	var (
-		sp  *stakingbindings.Stakingbindings
-		ip  bclient.IndexPool
-		err error
-	)
-	switch args[2] {
-	case "defi5":
-		sp, err = c.bc.StakingAt(args[2])
-		if err != nil {
-			break
-		}
-		ip, err = c.bc.DEFI5()
-	case "univ2-eth-defi5":
-		sp, err = c.bc.StakingAt(args[2])
-		if err != nil {
-			break
-		}
-		ip, err = c.bc.DEFI5()
-	default:
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid stake-type")
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
-		return
-	}
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "failed to lookup staking balance")
-		log.Println("error encountered: ", err)
-		return
-	}
-	earned, err := bclient.StakeEarned(sp, ip, common.HexToAddress(args[3]))
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "failed to lookup staking balance")
-		return
-	}
-	c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("staking rewards earned for %s: %s", args[3], earned))
-}
-
-func (c *Client) poolBalance(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	// 0    1            2      3
-	// !ndx pool-balance <pool> <account>
-	var (
-		ip  bclient.IndexPool
-		err error
-	)
-	switch args[2] {
-	case "defi5":
-		ip, err = c.bc.DEFI5()
-	case "cc10":
-		ip, err = c.bc.CC10()
-	default:
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
-		return
-	}
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "failed to get index pool binding")
-		log.Println("failed to get index pool binding")
-		return
-	}
-	bal, err := bclient.BalanceOfDecimal(ip, common.HexToAddress(args[3]))
-	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("failed to lookup balance: %s", err))
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
-	}
-	c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("account balance for %s: %s", args[3], bal))
 }
 
 func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
