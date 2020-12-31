@@ -3,6 +3,9 @@ package bclient
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
+	"time"
 
 	"github.com/bonedaddy/go-indexed/bindings/erc20"
 	mcapscontroller "github.com/bonedaddy/go-indexed/bindings/marketcap_sqrt_controller"
@@ -97,20 +100,31 @@ func (c *Client) StakingAt(contractType string) (*stakingbindings.Stakingbinding
 func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) {
 	tokens, err := ip.GetCurrentTokens(nil)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	var out = make(map[string]common.Address, len(tokens))
+	var out = make(map[string]common.Address)
 	for _, token := range tokens {
 		ec, err := erc20.NewErc20(token, c.ec)
 		if err != nil {
+			log.Println("erc: ", err)
 			return nil, err
 		}
 		// get the token name
-		name, err := ec.Name(nil)
-		if err != nil {
-			return nil, err
+		// ignore error as some tokens such as maker cause this problem
+		// https://github.com/ethereum/go-ethereum/issues/21754#issuecomment-716231021
+		name, _ := ec.Name(nil)
+		if name == "" {
+			name = guessTokenName(token.String())
 		}
 		out[name] = token
 	}
 	return out, nil
+}
+
+func guessTokenName(address string) string {
+	if address == "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2" {
+		return "Maker"
+	}
+	return fmt.Sprintf("unknown-%v-%v", time.Now().UnixNano(), len(address))
 }
