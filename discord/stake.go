@@ -2,41 +2,39 @@ package discord
 
 import (
 	"fmt"
-	"log"
-	"strings"
 
+	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
-	"github.com/bwmarrin/discordgo"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (c *Client) stakeEarned(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	// 0    1            2            3
-	// !ndx stake-earned <stake-type> <account>
-	var poolName string
-	if strings.Contains(args[2], "defi5") {
-		poolName = "defi5"
-	} else {
-		c.s.ChannelMessageSend(m.ChannelID, "invalid stake type")
+func (c *Client) stakeEarnedHandler(ctx *dgc.Ctx) {
+	arguments := ctx.Arguments
+	stakeType := arguments.Get(0).Raw()
+	accountAddr := arguments.Get(1).Raw()
+	var poolType string
+	switch stakeType {
+	case "univ2-eth-defi5", "defi5":
+		poolType = "defi5"
+	default:
+		ctx.RespondText("invalid stake-type")
 		return
 	}
-	ip, err := c.getIndexPool(poolName)
+	ip, err := c.getIndexPool(poolType)
 	if err != nil {
-		c.s.ChannelMessageSend(m.ChannelID, "invalid stake-type")
-		log.Println("getIndexPool error: ", err)
+		ctx.RespondText("failed to lookup index pool")
 		return
 	}
-	sp, err := c.getStakingRewards(args[2])
+	sp, err := c.getStakingRewards(stakeType)
 	if err != nil {
-		c.s.ChannelMessageSend(m.ChannelID, "invalid stake-type")
-		log.Println("getStakingRewards error: ", err)
+		ctx.RespondText("invalid stake-type")
 		return
 	}
-	earned, err := bclient.StakeEarned(sp, ip, common.HexToAddress(args[3]))
+	earned, err := bclient.StakeEarned(sp, ip, common.HexToAddress(accountAddr))
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "failed to lookup staking balance")
+		ctx.RespondText("failed to lookup staking balance")
 		return
 	}
 	earnedF, _ := earned.Float64()
-	c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("staking rewards earned for %s: %0.2f", args[3], earnedF))
+	ctx.RespondText(fmt.Sprintf("staking rewards earned for %s: %0.2f", accountAddr, earnedF))
 }

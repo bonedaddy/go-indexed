@@ -3,6 +3,7 @@ module github.com/bonedaddy/go-indexed
 go 1.15
 
 require (
+	github.com/bonedaddy/dgc v0.0.1
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/ethereum/go-ethereum v1.9.25
 	github.com/shopspring/decimal v1.2.0

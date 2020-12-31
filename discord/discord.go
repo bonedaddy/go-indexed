@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
 )
@@ -20,6 +21,7 @@ type Client struct {
 	token string
 	s     *discordgo.Session
 	bc    *bclient.Client
+	r     *dgc.Router
 }
 
 // NewClient provides a wrapper around discordgo
@@ -28,8 +30,57 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := &Client{token: token, s: dg, bc: bc}
-	client.s.AddHandler(client.messageCreate)
+	// declare the base router
+	router := dgc.Create(&dgc.Router{
+		Prefixes:         []string{"!ndx"},
+		IgnorePrefixCase: true,  // allow any case of the prefix
+		BotsAllowed:      false, // do not allow bots
+	})
+
+	client := &Client{token: token, s: dg, bc: bc, r: router}
+
+	router.RegisterDefaultHelpCommand(dg, nil)
+
+	router.RegisterCmd(&dgc.Command{
+		Name:        "pool",
+		Description: "command group for interacting with Indexed pools",
+		SubCommands: []*dgc.Command{
+			&dgc.Command{
+				Name:        "current-tokens",
+				Description: "returns the current tokens basketed into a pool",
+				Usage:       " pool current-tokens <pool-name>",
+				Example:     " pool current-tokens defi5",
+				IgnoreCase:  true,
+				Handler:     client.poolTokensHandler,
+			},
+			&dgc.Command{
+				Name:        "balance",
+				Description: "returns the current balance of indexed pool tokens held by an account",
+				Usage:       " pool balance <pool-name> <account>",
+				Example:     " pool balance defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
+				IgnoreCase:  true,
+				Handler:     client.poolBalanceHandler,
+			},
+		},
+		Usage:   " pool <subcommand> <args...>",
+		Example: " pool current-tokens defi5\n!ndx help pool current-tokens",
+		Handler: func(ctx *dgc.Ctx) {
+			ctx.RespondText("invalid invocation please run a specific subcommand")
+		},
+	})
+
+	router.RegisterCmd(&dgc.Command{
+		Name:        "stake-earned",
+		Description: "returns the amount of stake earned, currently supports defi5 and univ2-eth-defi5 stake contracts",
+		Usage:       " stake-earned <stake-type> <account>",
+		Example:     " stake-earned defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
+		IgnoreCase:  true,
+		Handler:     client.stakeEarnedHandler,
+	})
+
+	router.Initialize(dg)
+
+	// client.s.AddHandler(client.messageCreate)
 	if err := dg.Open(); err != nil {
 		return nil, err
 	}
@@ -59,23 +110,6 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 		}
 		if args[1] == "uniswap" {
 			c.handleUniswap(s, m, args)
-			return
-		}
-	}
-	if len(args) > 2 {
-		switch args[1] {
-		case "pool-tokens":
-			c.poolTokens(s, m, args)
-			return
-		}
-	}
-	if len(args) > 3 {
-		switch args[1] {
-		case "pool-balance":
-			c.poolBalance(s, m, args)
-			return
-		case "stake-earned":
-			c.stakeEarned(s, m, args)
 			return
 		}
 	}
