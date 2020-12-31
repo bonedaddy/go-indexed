@@ -70,6 +70,10 @@ func init() {
 				Name:  "exchange-amount <pair> <amount>",
 				Value: "retrieve the exchange amount for the given pair. `!ndx uniswap exchange-amount defi5-eth 1` will return the amount of ETH received for swapping 1 DEFI5 to ETH",
 			},
+			&discordgo.MessageEmbedField{
+				Name:  "reserves <pair>",
+				Value: "returns the amount of reserves available in each half of the pair",
+			},
 		},
 	}
 }

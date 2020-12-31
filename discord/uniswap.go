@@ -21,6 +21,26 @@ func (c *Client) handleUniswap(s *discordgo.Session, m *discordgo.MessageCreate,
 	case "help":
 		c.s.ChannelMessageSendEmbed(m.ChannelID, uniswapHelpEmbed)
 		return
+	case "reserves":
+		// 0    1       2        3
+		// !ndx uniswap reserves <pair>
+		if len(args) < 4 {
+			c.s.ChannelMessageSend(m.ChannelID, "invlaid invocation of !ndx uniswap reserves")
+			return
+		}
+		reserves, err := c.bc.Reserves(args[3])
+		if err != nil {
+			c.s.ChannelMessageSend(m.ChannelID, "fialed to get uniswap pair reserves: "+err.Error())
+			return
+		}
+		dec := c.bc.PairDecimals(args[3])
+		c.s.ChannelMessageSend(
+			m.ChannelID,
+			fmt.Sprintf(
+				"pair %s, reserve0 %s, reserve1 %s, timestamp %v",
+				args[3], utils.ToDecimal(reserves.Reserve0, dec), utils.ToDecimal(reserves.Reserve1, dec), reserves.BlockTimestampLast,
+			),
+		)
 	case "exchange-amount":
 		// 0    1       2               3      4
 		// !ndx uniswap exchange-amount <pair> <amount-float>

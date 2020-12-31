@@ -24,6 +24,26 @@ func (c *Client) Cc10EthPairAddress() common.Address {
 	return uniswap.GeneratePairAddress(CC10TokenAddress, WETHTokenAddress)
 }
 
+// Reserves returns available reserves in the pair
+func (c *Client) Reserves(pair string) (*uniswap.Reserve, error) {
+	switch strings.ToLower(pair) {
+	case "ndx-eth":
+		return c.uc.GetReserves(NDXTokenAddress, WETHTokenAddress)
+	case "eth-ndx":
+		return c.uc.GetReserves(WETHTokenAddress, NDXTokenAddress)
+	case "cc10-eth":
+		return c.uc.GetReserves(CC10TokenAddress, WETHTokenAddress)
+	case "eth-cc10":
+		return c.uc.GetReserves(WETHTokenAddress, CC10TokenAddress)
+	case "defi5-eth":
+		return c.uc.GetReserves(DEFI5TokenAddress, WETHTokenAddress)
+	case "eth-defi5":
+		return c.uc.GetReserves(WETHTokenAddress, DEFI5TokenAddress)
+	default:
+		return nil, errors.New("unsupported pair")
+	}
+}
+
 // ExchangeAmount returns the exchange amount for a variety of pairs
 func (c *Client) ExchangeAmount(amount *big.Int, pair string) (*big.Int, error) {
 	switch strings.ToLower(pair) {
