@@ -58,7 +58,7 @@ func main() {
 			Name:  "discord-bot",
 			Usage: "starts the discord indexed finance bot",
 			Action: func(c *cli.Context) error {
-				client, err := discord.NewClient(c.String("discord.token"))
+				client, err := discord.NewClient(c.String("discord.token"), bc)
 				if err != nil {
 					return err
 				}
