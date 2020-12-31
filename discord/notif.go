@@ -1,11 +1,15 @@
 package discord
 
 import (
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func (c *Client) handleNotif(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
@@ -42,7 +46,26 @@ func (c *Client) handleNotif(s *discordgo.Session, m *discordgo.MessageCreate, a
 			newArgs = append(newArgs,
 				args[0], "staking-earned", args[3], args[4],
 			)
-			c.stakeEarned(s, m, newArgs)
+			ip, err := c.getIndexPool(args[3])
+			if err != nil {
+				c.s.ChannelMessageSend(m.ChannelID, err.Error())
+				return
+			}
+			sp, err := c.getStakingRewards(args[3])
+			if err != nil {
+				c.s.ChannelMessageSend(m.ChannelID, err.Error())
+				return
+			}
+			earned, err := bclient.StakeEarned(sp, ip, common.HexToAddress(args[4]))
+			if err != nil {
+				c.s.ChannelMessageSend(m.ChannelID, "failed to get stake earned")
+				return
+			}
+			_, err = c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s, staking rewards earned for pool %s: %s", m.Author.Mention(), args[3], earned))
+			if err != nil {
+				log.Println("failed to send message: ", err)
+				return
+			}
 			time.Sleep(interval)
 			count++
 		}
