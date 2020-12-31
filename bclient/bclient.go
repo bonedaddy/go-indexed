@@ -68,6 +68,8 @@ func (c *Client) StakingAt(contractType string) (*stakingbindings.Stakingbinding
 	switch contractType {
 	case "defi5":
 		return stakingbindings.NewStakingbindings(DEFI5StakingAddress, c.ec)
+	case "univ2-eth-defi5":
+		return stakingbindings.NewStakingbindings(DEFI5UNILPStakingAddress, c.ec)
 	default:
 		return nil, errors.New("unsupported staking contract")
 	}

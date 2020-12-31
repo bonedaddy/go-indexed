@@ -17,7 +17,7 @@ func init() {
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "stake-earned <stake-type> <account-address>",
-				Value: "returns the amount of staking rewards earned, only supported stake-type param is defi5",
+				Value: "returns the amount of staking rewards earned, only supported stake-type params are defi5 and univ2-eth-defi5",
 			},
 		},
 	}

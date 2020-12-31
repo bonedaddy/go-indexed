@@ -6,13 +6,16 @@ import (
 )
 
 var (
-	defi5Addr      = "0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41"
-	defi5StakeAddr = "0x11bf850D1B85eA02eF9F06Cf09488E443655b586"
-	cc10Addr       = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
+	defi5Addr           = "0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41"
+	defi5StakeAddr      = "0x11bf850D1B85eA02eF9F06Cf09488E443655b586"
+	defi5UNILPStakeAddr = "0x04834fE50BE6954088d979A84bE20913efCA9118"
+	cc10Addr            = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
 	// DEFI5TokenAddress is the address of the DEFI5 token/pool contract
 	DEFI5TokenAddress = common.HexToAddress(defi5Addr)
 	// DEFI5StakingAddress is the address of the DEFI5 staking contract
 	DEFI5StakingAddress = common.HexToAddress(defi5StakeAddr)
+	// DEFI5UNILPStakingAddress is the address of the ETH-DEFI5 Uniswap staking contract
+	DEFI5UNILPStakingAddress = common.HexToAddress(defi5UNILPStakeAddr)
 	// CC10TokenAddress is the address of the CC10 token/pool contract
 	CC10TokenAddress = common.HexToAddress(cc10Addr)
 	// InfuraWSURL is the URL for INFURA websockets access

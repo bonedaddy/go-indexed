@@ -66,7 +66,13 @@ func (c *Client) stakeEarned(s *discordgo.Session, m *discordgo.MessageCreate, a
 	)
 	switch args[2] {
 	case "defi5":
-		sp, err = c.bc.StakingAt("defi5")
+		sp, err = c.bc.StakingAt(args[2])
+		if err != nil {
+			break
+		}
+		ip, err = c.bc.DEFI5()
+	case "univ2-eth-defi5":
+		sp, err = c.bc.StakingAt(args[2])
 		if err != nil {
 			break
 		}
