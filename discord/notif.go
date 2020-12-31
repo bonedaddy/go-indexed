@@ -15,6 +15,12 @@ import (
 func (c *Client) handleNotif(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	// 0    1      2
 	// !ndx notify <command> <args...> [-interval]
+
+	if args[2] == "help" {
+		c.s.ChannelMessageSendEmbed(m.ChannelID, notifyHelpEmbed)
+		return
+	}
+
 	var interval = time.Second * 60
 	if strings.Contains(args[len(args)-1], "-interval") {
 		parts := strings.Split(args[len(args)-1], "=")

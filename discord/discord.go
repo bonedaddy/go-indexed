@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	helpEmbed *discordgo.MessageEmbed
+	helpEmbed       *discordgo.MessageEmbed
+	notifyHelpEmbed *discordgo.MessageEmbed
 )
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
