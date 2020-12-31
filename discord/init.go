@@ -24,8 +24,8 @@ func init() {
 				Value: "returns the amount of staking rewards earned, only supported stake-type params are defi5 and univ2-eth-defi5",
 			},
 			&discordgo.MessageEmbedField{
-				Name:  "notify <command> <args...>",
-				Value: "enable notifying user of certain conditions, only supported command is stake-earned",
+				Name:  "notify <command> <args...> [-interval]",
+				Value: "enable notifying user of certain conditions, only supported command is stake-earned. -interval specifies the notification frequency in seconds, and will notify up to a maximum of 10 tiems",
 			},
 		},
 	}
