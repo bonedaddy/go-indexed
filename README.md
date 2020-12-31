@@ -21,3 +21,15 @@ Current capabilities:
 To update the ABIs from the `indexed-js` submodule: `make copy-abi`
 
 To update the generated golang code for the ABIs: `make gen-bindings`
+
+Note: Updating the uniswap bindings is a bit tedious because of the usage of waffle which outputs a combined json file that isnt properly generating the golang bindings so you must manually copy the ABI from the combined json output into its own file
+
+## Contract Bindings
+
+#  bindings/uniswapv2_oracle
+
+These are the contract bindings for the Indexed UniswapV2 Oracle
+
+# bindings/uniswapv2
+
+These are contract bindings for uniswapv2 itself
