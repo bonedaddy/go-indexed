@@ -14,11 +14,11 @@ func StakeBalanceOf(
 	addr common.Address) (decimal.Decimal, error) {
 	bal, err := sp.BalanceOf(nil, addr)
 	if err != nil {
-		return decimal.Decimal{}, err
+		return decimal.Zero, err
 	}
 	dec, err := ip.Decimals(nil)
 	if err != nil {
-		return decimal.Decimal{}, nil
+		return decimal.Zero, err
 	}
 	return utils.ToDecimal(bal, int(dec)), nil
 }
@@ -30,11 +30,11 @@ func StakeEarned(
 	addr common.Address) (decimal.Decimal, error) {
 	earned, err := sp.Earned(nil, addr)
 	if err != nil {
-		return decimal.Decimal{}, nil
+		return decimal.Zero, err
 	}
 	dec, err := ip.Decimals(nil)
 	if err != nil {
-		return decimal.Decimal{}, nil
+		return decimal.Zero, err
 	}
 	return utils.ToDecimal(earned, int(dec)), nil
 }
