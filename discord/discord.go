@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	helpEmbed       *discordgo.MessageEmbed
-	notifyHelpEmbed *discordgo.MessageEmbed
+	helpEmbed        *discordgo.MessageEmbed
+	notifyHelpEmbed  *discordgo.MessageEmbed
+	uniswapHelpEmbed *discordgo.MessageEmbed
 )
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
@@ -50,6 +51,10 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 	if len(args) >= 2 {
 		if args[1] == "notify" {
 			c.handleNotif(s, m, args)
+			return
+		}
+		if args[1] == "uniswap" {
+			c.handleUniswap(s, m, args)
 			return
 		}
 	}

@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func (c *Client) uniswapQuery(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
+func (c *Client) handleUniswap(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	// 0     1      2
 	// !ndx uniswap <command> <args...>
 	/*
@@ -19,7 +20,8 @@ func (c *Client) uniswapQuery(s *discordgo.Session, m *discordgo.MessageCreate, 
 	*/
 	switch args[2] {
 	case "help":
-		// todo
+		c.s.ChannelMessageSendEmbed(m.ChannelID, uniswapHelpEmbed)
+		return
 	case "exchange-amount":
 		// 0    1       2               3      4
 		// !ndx uniswap exchange-amount <pair> <amount>
@@ -37,6 +39,8 @@ func (c *Client) uniswapQuery(s *discordgo.Session, m *discordgo.MessageCreate, 
 			c.s.ChannelMessageSend(m.ChannelID, "failed to get exchange amount: "+err.Error())
 			return
 		}
-		utils.ToDecimal(exchAmt, c.bc.PairDecimals(args[3]))
+		c.s.ChannelMessageSend(m.ChannelID,
+			fmt.Sprintf("swapping %v with pair %s will yield: %s", amt, args[3], utils.ToDecimal(exchAmt, c.bc.PairDecimals(args[3]))),
+		)
 	}
 }
