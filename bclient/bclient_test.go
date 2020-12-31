@@ -63,13 +63,13 @@ func TestBClient(t *testing.T) {
 			t.Log("defi5 uniswap oracle address: ", addr)
 			orc, err := client.OracleAt(defi5)
 			require.NoError(t, err)
-			tokens, err := defi5.GetCurrentTokens(nil)
+			tokens, err := client.PoolTokensFor(defi5)
 			require.NoError(t, err)
-			for _, token := range tokens {
+			for name, addr := range tokens {
 				// get time weighted average price of token in terms of weth
-				price, err := orc.ComputeAverageTokenPrice(nil, token, big.NewInt(0), big.NewInt(36288000)) // price between 0 seconds and 7 days
+				price, err := orc.ComputeAverageTokenPrice(nil, addr, big.NewInt(0), big.NewInt(36288000)) // price between 0 seconds and 7 days
 				require.NoError(t, err)
-				t.Logf("token %s average eth price %s", token, price.X)
+				t.Logf("token %s (%s) average eth price %s", addr, name, price.X)
 			}
 		})
 	})

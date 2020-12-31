@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/bonedaddy/go-indexed/bindings/erc20"
 	mcapscontroller "github.com/bonedaddy/go-indexed/bindings/marketcap_sqrt_controller"
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
@@ -90,4 +91,26 @@ func (c *Client) StakingAt(contractType string) (*stakingbindings.Stakingbinding
 		return nil, errors.New("unsupported staking contract")
 	}
 
+}
+
+// PoolTokensFor returns the pools tokens baseketed in the pool, and their ERC20 name
+func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) {
+	tokens, err := ip.GetCurrentTokens(nil)
+	if err != nil {
+		return nil, err
+	}
+	var out = make(map[string]common.Address, len(tokens))
+	for _, token := range tokens {
+		ec, err := erc20.NewErc20(token, c.ec)
+		if err != nil {
+			return nil, err
+		}
+		// get the token name
+		name, err := ec.Name(nil)
+		if err != nil {
+			return nil, err
+		}
+		out[name] = token
+	}
+	return out, nil
 }
