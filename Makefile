@@ -10,6 +10,7 @@ copy-abi:
 	if [ ! -d abi ]; then mkdir abi ; fi
 	cp -r ./indexed-js/src/abi/*.json abi
 	cp indexed-core/abi/MarketCapSqrtController.json abi
+	cp uniswap-v2-core/build/IUniswap*.json abi
 
 .PHONY: gen-bindings
 gen-bindings:
