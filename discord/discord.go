@@ -91,7 +91,7 @@ func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, ar
 		}
 		return
 	}
-	tokens, err := ip.GetCurrentTokens(nil)
+	tokens, err := c.bc.PoolTokensFor(ip)
 	if err != nil {
 		_, err = c.s.ChannelMessageSend(m.ChannelID, "failed to lookup current tokens")
 		if err != nil {
@@ -100,8 +100,8 @@ func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, ar
 		return
 	}
 	msg := fmt.Sprintf("current tokens in pool %s\n", args[2])
-	for _, token := range tokens {
-		msg += fmt.Sprintf("%s\n", token)
+	for name, addr := range tokens {
+		msg += fmt.Sprintf("%s (%s)\n", name, addr)
 	}
 	c.s.ChannelMessageSend(m.ChannelID, msg)
 }
