@@ -22,7 +22,7 @@ func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, ar
 	}
 	tokens, err := c.bc.PoolTokensFor(ip)
 	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "failed to lookup current tokens")
+		_, err = c.s.ChannelMessageSend(m.ChannelID, "failed to lookup current tokens: "+err.Error())
 		if err != nil {
 			log.Println("failed to send channel message")
 		}
