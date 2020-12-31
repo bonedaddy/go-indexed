@@ -58,5 +58,6 @@ func (c *Client) poolBalance(s *discordgo.Session, m *discordgo.MessageCreate, a
 			log.Println("failed to send channel message")
 		}
 	}
-	c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("account balance for %s: %s", args[3], bal))
+	balF, _ := bal.Float64()
+	c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("account balance for %s: %0.2f", args[3], balF))
 }

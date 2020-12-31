@@ -115,11 +115,11 @@ func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) 
 		// get the token name
 		// ignore error as some tokens such as maker cause this problem
 		// https://github.com/ethereum/go-ethereum/issues/21754#issuecomment-716231021
-		name, _ := ec.Name(nil)
-		if name == "" {
-			name = guessTokenName(token.String())
+		symbol, _ := ec.Symbol(nil)
+		if symbol == "" {
+			symbol = guessTokenSymbol(token.String())
 		}
-		out[name] = token
+		out[symbol] = token
 	}
 	return out, nil
 }
@@ -130,6 +130,13 @@ func (c *Client) Uniswap() *uniswap.Client { return c.uc }
 func guessTokenName(address string) string {
 	if address == "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2" {
 		return "Maker"
+	}
+	return fmt.Sprintf("unknown-%v-%v", time.Now().UnixNano(), len(address))
+}
+
+func guessTokenSymbol(address string) string {
+	if address == "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2" {
+		return "MKR"
 	}
 	return fmt.Sprintf("unknown-%v-%v", time.Now().UnixNano(), len(address))
 }

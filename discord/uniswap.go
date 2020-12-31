@@ -3,6 +3,7 @@ package discord
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/bwmarrin/discordgo"
@@ -59,8 +60,18 @@ func (c *Client) handleUniswap(s *discordgo.Session, m *discordgo.MessageCreate,
 			c.s.ChannelMessageSend(m.ChannelID, "failed to get exchange amount: "+err.Error())
 			return
 		}
+		exchDec := utils.ToDecimal(exchAmt, c.bc.PairDecimals(args[3]))
+		exchF, _ := exchDec.Float64()
+
+		pairParts := strings.Split(args[3], "-")
+		if len(pairParts) < 2 {
+			c.s.ChannelMessageSend(m.ChannelID, "failed to parse given pair")
+			return
+		}
+		inPair := strings.ToUpper(pairParts[0])
+		outPair := strings.ToUpper(pairParts[1])
 		c.s.ChannelMessageSend(m.ChannelID,
-			fmt.Sprintf("swapping %v with pair %s will yield: %s", amtF, args[3], utils.ToDecimal(exchAmt, c.bc.PairDecimals(args[3]))),
+			fmt.Sprintf("swapping %v-%s will yield approximately %0.2f-%s\nnote: all prices are approximates", amtF, inPair, exchF, outPair),
 		)
 	}
 }

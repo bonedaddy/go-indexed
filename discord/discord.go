@@ -47,7 +47,11 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 	if len(args) == 1 && args[0] == "!ndx" {
 		c.sendHelp(s, m)
 		return
+	} else if len(args) == 2 && args[0] == "!ndx" && args[1] == "help" {
+		c.sendHelp(s, m)
+		return
 	}
+
 	if len(args) >= 2 {
 		if args[1] == "notify" {
 			c.handleNotif(s, m, args)
