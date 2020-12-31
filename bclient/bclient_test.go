@@ -1,6 +1,7 @@
 package bclient
 
 import (
+	"math/big"
 	"os"
 	"testing"
 
@@ -60,6 +61,16 @@ func TestBClient(t *testing.T) {
 			addr, err := client.OracleFor(defi5)
 			require.NoError(t, err)
 			t.Log("defi5 uniswap oracle address: ", addr)
+			orc, err := client.OracleAt(defi5)
+			require.NoError(t, err)
+			tokens, err := defi5.GetCurrentTokens(nil)
+			require.NoError(t, err)
+			for _, token := range tokens {
+				// get time weighted average price of token in terms of weth
+				price, err := orc.ComputeAverageTokenPrice(nil, token, big.NewInt(0), big.NewInt(36288000)) // price between 0 seconds and 7 days
+				require.NoError(t, err)
+				t.Logf("token %s average eth price %s", token, price.X)
+			}
 		})
 	})
 
