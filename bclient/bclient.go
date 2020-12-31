@@ -1,6 +1,8 @@
 package bclient
 
 import (
+	"errors"
+
 	mcapscontroller "github.com/bonedaddy/go-indexed/bindings/marketcap_sqrt_controller"
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
@@ -62,6 +64,12 @@ func (c *Client) OracleFor(ip IndexPool) (common.Address, error) {
 }
 
 // StakingAt returns a staking rewards bindings at the given address
-func (c *Client) StakingAt(addr common.Address) (*stakingbindings.Stakingbindings, error) {
-	return stakingbindings.NewStakingbindings(DEFI5StakingAddress, c.ec)
+func (c *Client) StakingAt(contractType string) (*stakingbindings.Stakingbindings, error) {
+	switch contractType {
+	case "defi5":
+		return stakingbindings.NewStakingbindings(DEFI5StakingAddress, c.ec)
+	default:
+		return nil, errors.New("unsupported staking contract")
+	}
+
 }

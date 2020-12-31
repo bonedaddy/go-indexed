@@ -42,7 +42,7 @@ func TestBClient(t *testing.T) {
 		t.Log("balance decimal: ", l)
 
 		t.Run("DEFI5_Staking", func(t *testing.T) {
-			stake, err := client.StakingAt(DEFI5StakingAddress)
+			stake, err := client.StakingAt("defi5")
 			require.NoError(t, err)
 			bal, err := StakeBalanceOf(stake, defi5, myAddress)
 			require.NoError(t, err)
