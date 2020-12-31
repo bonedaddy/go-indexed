@@ -15,7 +15,8 @@ import (
 func (c *Client) handleNotif(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	// 0    1      2
 	// !ndx notify <command> <args...> [-interval]
-
+	c.s.ChannelMessageSend(m.ChannelID, "not yet available")
+	return
 	if args[2] == "help" {
 		c.s.ChannelMessageSendEmbed(m.ChannelID, notifyHelpEmbed)
 		return
