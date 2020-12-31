@@ -3,6 +3,7 @@ package discord
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
@@ -28,11 +29,16 @@ func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, ar
 		}
 		return
 	}
-	msg := fmt.Sprintf("current tokens in pool %s\n", args[2])
+	tokensEmbed := BaseEmbed()
+	tokensEmbed.Title = fmt.Sprintf("%s Current Pool Tokens", strings.ToUpper(args[2]))
+
 	for name, addr := range tokens {
-		msg += fmt.Sprintf("%s (%s)\n", name, addr)
+		tokensEmbed.Fields = append(tokensEmbed.Fields, &discordgo.MessageEmbedField{
+			Name:  name,
+			Value: addr.String(),
+		})
 	}
-	c.s.ChannelMessageSend(m.ChannelID, msg)
+	c.s.ChannelMessageSendEmbed(m.ChannelID, tokensEmbed)
 }
 
 func (c *Client) poolBalance(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/bonedaddy/go-indexed/bclient"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
+	"github.com/bwmarrin/discordgo"
 )
 
 func (c *Client) getIndexPool(name string) (bclient.IndexPool, error) {
@@ -26,5 +27,15 @@ func (c *Client) getStakingRewards(name string) (*stakingbindings.Stakingbinding
 		return c.bc.StakingAt("univ2-eth-defi5")
 	default:
 		return nil, errors.New("invalid staking rewards name")
+	}
+}
+
+// BaseEmbed returns a base message embed type to be customized
+func BaseEmbed() *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: "https://pbs.twimg.com/profile_images/1342395531318976518/kIv5abLc_400x400.jpg",
+		},
+		Color: 0x00ff00,
 	}
 }
