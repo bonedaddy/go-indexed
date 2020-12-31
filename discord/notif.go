@@ -61,7 +61,7 @@ func (c *Client) handleNotif(s *discordgo.Session, m *discordgo.MessageCreate, a
 				c.s.ChannelMessageSend(m.ChannelID, "failed to get stake earned")
 				return
 			}
-			_, err = c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s, staking rewards earned for pool %s: %s", m.Author.Mention(), args[3], earned))
+			_, err = c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s: staking rewards earned for pool %s: %s", m.Author.Mention(), args[3], earned))
 			if err != nil {
 				log.Println("failed to send message: ", err)
 				return
