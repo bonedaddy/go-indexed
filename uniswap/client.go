@@ -40,14 +40,13 @@ func NewClient(bc *ethclient.Client) *Client {
 	}
 }
 
-// GetExchangeAmount returns the amount of tokens you'd receive when exchanging the given amount of token0 to token1.
-func (c *Client) GetExchangeAmount(amount *big.Int, token0, token1 common.Address) (*big.Int, error) {
+// GetReserves retursn the available reserves in a pair
+func (c *Client) GetReserves(token0, token1 common.Address) (*Reserve, error) {
 	addr := GeneratePairAddress(token0, token1)
 	caller, err := uniswapv2pair.NewUniswapv2pairCaller(addr, c.bc)
 	if err != nil {
 		return nil, err
 	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 	reserves, err := caller.GetReserves(&bind.CallOpts{
@@ -56,7 +55,6 @@ func (c *Client) GetExchangeAmount(amount *big.Int, token0, token1 common.Addres
 	if err != nil {
 		return nil, err
 	}
-
 	// This is the tricky bit.
 	// The reserve call returns the reserves for token0 and token1 in a sorted order.
 	// This means we need to check if our token addresses are sorted or not and flip the reserves if they are not sorted.
@@ -65,7 +63,15 @@ func (c *Client) GetExchangeAmount(amount *big.Int, token0, token1 common.Addres
 		// We're not sorted, so the reserves need to be flipped to represent the actual reserves.
 		reserves.Reserve0, reserves.Reserve1 = reserves.Reserve1, reserves.Reserve0
 	}
+	return &Reserve{Reserve0: reserves.Reserve0, Reserve1: reserves.Reserve1, BlockTimestampLast: reserves.BlockTimestampLast}, nil
+}
 
+// GetExchangeAmount returns the amount of tokens you'd receive when exchanging the given amount of token0 to token1.
+func (c *Client) GetExchangeAmount(amount *big.Int, token0, token1 common.Address) (*big.Int, error) {
+	reserves, err := c.GetReserves(token0, token1)
+	if err != nil {
+		return nil, err
+	}
 	return Quote(amount, reserves.Reserve0, reserves.Reserve1), nil
 }
 
