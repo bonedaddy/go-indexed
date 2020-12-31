@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -50,6 +51,13 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 	}
 	if len(args) > 2 {
 		switch args[1] {
+		case "pool-tokens":
+			c.poolTokens(s, m, args)
+			return
+		}
+	}
+	if len(args) > 3 {
+		switch args[1] {
 		case "pool-balance":
 			c.poolBalance(s, m, args)
 			return
@@ -59,6 +67,43 @@ func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate,
 		}
 	}
 	c.s.ChannelMessageSend(m.ChannelID, "invalid command invocation")
+}
+
+func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
+	// 0    1           2
+	// !ndx pool-tokens <pool-name>
+	var (
+		ip  bclient.IndexPool
+		err error
+	)
+	switch args[2] {
+	case "defi5":
+		ip, err = c.bc.DEFI5()
+	case "cc10":
+		ip, err = c.bc.CC10()
+	default:
+		err = errors.New("invalid pool")
+	}
+	if err != nil {
+		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
+		if err != nil {
+			log.Println("failed to send channel message")
+		}
+		return
+	}
+	tokens, err := ip.GetCurrentTokens(nil)
+	if err != nil {
+		_, err = c.s.ChannelMessageSend(m.ChannelID, "failed to lookup current tokens")
+		if err != nil {
+			log.Println("failed to send channel message")
+		}
+		return
+	}
+	msg := fmt.Sprintf("current tokens in pool %s\n", args[2])
+	for _, token := range tokens {
+		msg += fmt.Sprintf("%s\n", token)
+	}
+	c.s.ChannelMessageSend(m.ChannelID, msg)
 }
 
 func (c *Client) stakeEarned(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {

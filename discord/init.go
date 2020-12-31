@@ -16,6 +16,10 @@ func init() {
 				Value: "returns the index pool balance for a given pool held by account-address",
 			},
 			&discordgo.MessageEmbedField{
+				Name:  "pool-tokens <pool-name>",
+				Value: "returns the current tokens basketed in the pool",
+			},
+			&discordgo.MessageEmbedField{
 				Name:  "stake-earned <stake-type> <account-address>",
 				Value: "returns the amount of staking rewards earned, only supported stake-type params are defi5 and univ2-eth-defi5",
 			},
