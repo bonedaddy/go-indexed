@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/discord"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
 )
@@ -51,6 +54,27 @@ func main() {
 		return err
 	}
 	app.Commands = cli.Commands{
+		&cli.Command{
+			Name:  "discord-bot",
+			Usage: "starts the discord indexed finance bot",
+			Action: func(c *cli.Context) error {
+				client, err := discord.NewClient(c.String("discord.token"))
+				if err != nil {
+					return err
+				}
+				sc := make(chan os.Signal, 1)
+				signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+				<-sc
+				return client.Close()
+			},
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "discord.token",
+					Usage:   "the discord api token",
+					EnvVars: []string{"DISCORD_TOKEN"},
+				},
+			},
+		},
 		&cli.Command{
 			Name:  "pool",
 			Usage: "index pool commands",
