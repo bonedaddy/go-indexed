@@ -18,6 +18,10 @@ var (
 	DEFI5UNILPStakingAddress = common.HexToAddress(defi5UNILPStakeAddr)
 	// CC10TokenAddress is the address of the CC10 token/pool contract
 	CC10TokenAddress = common.HexToAddress(cc10Addr)
+	// WETHTokenAddress is the address of the WETH token contract
+	WETHTokenAddress = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+	// DAIAddress is the address of the MCD (Multi Collateral DAI) contract
+	DAIAddress = common.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
 	// InfuraWSURL is the URL for INFURA websockets access
 	InfuraWSURL = "wss://mainnet.infura.io/ws/v3/"
 	// InfuraHTTPURL is the URL for INFURA HTTP access
