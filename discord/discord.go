@@ -49,6 +49,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 			}
 			ticker := time.NewTicker(time.Second * 2)
 			defer ticker.Stop()
+			var lastPrice float64
 			for {
 				select {
 				case <-ctx.Done():
@@ -74,6 +75,26 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 						goto EXIT
 					}
 				}
+				priceGreater := false
+				priceLess := false
+				if price > lastPrice {
+					priceGreater = true
+				}
+				if price < lastPrice {
+					priceLess = true
+				}
+				lastPrice = price
+				var status string
+				if priceGreater {
+					status = "📈"
+				}
+				if priceLess {
+					status = "📉"
+				}
+				if !priceLess && !priceGreater {
+					status = "📈📉"
+				}
+				watcherBot.UpdateStatus(0, status)
 				guilds, err := watcherBot.UserGuilds(0, "", "")
 				if err != nil {
 					log.Println("error: ", err)
