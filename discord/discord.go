@@ -29,6 +29,14 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if err := dg.Open(); err != nil {
+		return nil, err
+	}
+	if err := dg.UpdateListeningStatus("!ndx help"); err != nil {
+		log.Println("failed to udpate streaming status: ", err)
+	}
+
 	// declare the base router
 	router := dgc.Create(&dgc.Router{
 		Prefixes:         []string{"!ndx"},
@@ -41,7 +49,8 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 
 	client := &Client{token: token, s: dg, bc: bc, r: router}
 
-	router.RegisterDefaultHelpCommand(dg, nil)
+	// register our custom help command
+	registerHelpCommand(dg, nil, router)
 
 	router.RegisterCmd(&dgc.Command{
 		Name:        "pool",
@@ -101,10 +110,6 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 
 	router.Initialize(dg)
 
-	// client.s.AddHandler(client.messageCreate)
-	if err := dg.Open(); err != nil {
-		return nil, err
-	}
 	log.Println("bot is now running")
 	return client, nil
 }
