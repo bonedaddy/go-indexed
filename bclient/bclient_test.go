@@ -17,6 +17,9 @@ var (
 
 func TestBClient(t *testing.T) {
 	infuraAPIKey := os.Getenv("INFURA_API_KEY")
+	if infuraAPIKey == "" {
+		t.Fatal("INFURA_API_KEY env var is empty")
+	}
 	client, err := NewInfuraClient(infuraAPIKey, false)
 	require.NoError(t, err)
 	t.Run("DEFI5", func(t *testing.T) {
