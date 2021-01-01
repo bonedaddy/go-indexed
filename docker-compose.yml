@@ -1,0 +1,8 @@
+version: "3.5"
+services:
+  ndx-bot:
+    image: gondx:latest
+    command: "discord ndx-bot"
+    environment: 
+      - INFURA_API_KEY="..."
+      - DISCORD_TOKEN="..."
