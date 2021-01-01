@@ -26,13 +26,10 @@ github.com/aristanetworks/goarista v0.0.0-20170210015632-ea17b1a17847 h1:rtI0fD4
 github.com/aristanetworks/goarista v0.0.0-20170210015632-ea17b1a17847/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
-github.com/bonedaddy/dgc v0.0.1 h1:GcQ6HhfOxHygHi5Y0mS300r091cUZaflLcKKnhX5kzA=
-github.com/bonedaddy/dgc v0.0.1/go.mod h1:MUWmuYHiLuDlRQT+WL165VLyyhXUn+iOcCV5PsjgXAE=
+github.com/bonedaddy/dgc v0.0.2-0.20210101001021-5e0add7c4088 h1:t4Z+bNaMXXxk0dFO5M/1iUaXDpJGbr4gO0hY8oCOKII=
+github.com/bonedaddy/dgc v0.0.2-0.20210101001021-5e0add7c4088/go.mod h1:MB/odTlKS7hlW8CC/5LkaPf16QGByIIPjIWkT6solH0=
 github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6 h1:Eey/GGQ/E5Xp1P2Lyx1qj007hLZfbi0+CoVeJruGCtI=
 github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6/go.mod h1:Dmm/EzmjnCiweXmzRIAiUWCInVmPgjkzgv5k4tVyXiQ=
-github.com/bwmarrin/discordgo v0.20.3/go.mod h1:O9S4p+ofTFwB02em7jkpkV8M3R0/PUVOwN61zSZ0r4Q=
-github.com/bwmarrin/discordgo v0.22.0 h1:uBxY1HmlVCsW1IuaPjpCGT6A2DBwRn0nvOguQIxDdFM=
-github.com/bwmarrin/discordgo v0.22.0/go.mod h1:c1WtWUGN6nREDmzIpyTp/iD3VYt4Fpx+bVyfBG7JE+M=
 github.com/bwmarrin/discordgo v0.22.1-0.20201217190221-8d6815dde7ed h1:XX9GfL/neEtOytz+2wjWjauWC1vLzmsj3fCPNoSmIZo=
 github.com/bwmarrin/discordgo v0.22.1-0.20201217190221-8d6815dde7ed/go.mod h1:c1WtWUGN6nREDmzIpyTp/iD3VYt4Fpx+bVyfBG7JE+M=
 github.com/cespare/cp v0.1.0 h1:SE+dxFebS7Iik5LK0tsi1k9ZCxEaFX4AjQmoyA+1dJk=
