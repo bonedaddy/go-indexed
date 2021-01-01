@@ -1,0 +1,52 @@
+language: go
+
+go: 1.15.x
+
+services:
+- docker
+
+sudo: required
+
+env:
+  global:
+  - secure: fbXgFfFNOyTnLwKArHgIBH1QVI4x+vEQcKBQD2KLf6cI1wJ5bIxPvWSgShG8uJGnbghBKRob/Q8EtB+bkSqDzB9i8amReJx9BKbKiaAZx1ra3bAdsDqqEgfrz7ENl60CuWYj38OJmGOc+5KT+G3JePdBjKRiGwoh1dlPKJ0DXptcHhmzvZhXjuRkn2n0IdF6UZlYmfDglYCfwwCy/nljmkbFUDTzjUnTHCb1kADmpXZOweynDDlCtp9ut4EYO+SQKYA/r+jJMkYzYfHAIqfZbcLqucqI+2uyYDToPeSPKXlTeFti4j2eSS/HMK+t1TpxxMz3vs83IIAlNcidycG+GpOTqdRzqSylypTxqah+dERKybm5P279MulunbczsGxRSN4SZEn9hNU6P7uKM0rVT/0RblGnmCqFeeVxEW6/hF4vp+CBUlDg91y3ByPgB4LPfEGnQe1CtMkCU5AgHcxQ1ZaRC2BZugaKbkgugqEl/meDBgFheskH9dAPUzfNnKxgqftHOvvzFCATL928MoTMiCYcNyffB0FAnuxROJ0MgDfmfOnp2EH7hcokz6cuQhLgfBcl1sy9CaslX7LypRA0oiji6vsMpxik78G8dELGHJK/vutdK7jszddZ4+607AeRvAaui5Mq4YeScsdruRheWgYT1RRo0HeCxS8fSqxWy/c=
+
+install:
+  # - go get honnef.co/go/tools/cmd/staticcheck
+  # - go get -u golang.org/x/lint/golint
+  - git submodule update --init
+  - go mod download
+
+before_script:
+  - go vet ./...
+  - go build ./...
+  - go test -run xxxx ./...
+
+script:
+  - go test -short -failfast -coverprofile=coverage.txt ./...
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)
+
+before_deploy:
+  - make cli
+  - make docker-build
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: QsNAA4l7MYcbyJ2suWjw7e6MiN95PHQFn5CWkbYOXDtQtDLP2LWQVMymK2PQGwyqsJ/lxRayv0r80hEfwtdJ3OA+wiYlJnKYfZ7K/HWZrwWSMe2QL3hajTNYI2i6adApshmbDJuAmkt8CwnqiI26xBuJBHFOrs/tQItwagGZkT0O+yfCCTbp9SEQqc5zIT94Wwt5gGHHrG/u2kUE/7IZx1KXiQDPEtT+1/Eakon23oGhyLFlE9KFV0rO8L1+q6phBNtNi/PJ7CBn5jXuUQuCZh1eO/6/uZRNr2IHLriap3YNDlTxdl3/l0JSu0XXYeiSv9BdNCkU0YvG06bohY/aPhBJV8xeIxVMNOBhG7SpJJSnVY11uQcL+N9nG2Gpiq+aMrqaqygeKRqT/+U5uU3xas7wvtTWTOvsYDv0I4GFVRbpCY1Fpo0V+daoC6NRu6hlMnA9SQVSTBGVoAoTVDRbXobqcy/c20iUoonG0M2bFK4BX/BuUtQVNiy95GGEIZevi1LRDgueXoRqlj0ZTQMw7Johh7xb0xnHUmhuUAlM++Zh4/mLLa44rsfU1M4pVBTPyhJhcwNSf2+jERsGP33jNkqE9VZBrh/hnGYJe2ALNHsYmhfLGJEnMtqmL0Bv6rPe1Qu1rZWSzi1YvohY1QMkPalcQTpa7HRKZbdeCE37zJQ=
+  file_glob: true
+  file: release/*
+  on:
+    tags: true
+    repo: bonedady/go-indexed
+
+notifications:
+  email: false
+
+cache:
+  directories:
+    - $GOPATH/pkg/mod
+    - $HOME/.cache/go-build
