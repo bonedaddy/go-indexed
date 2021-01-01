@@ -1,37 +1,25 @@
 language: go
-
 go: 1.15.x
-
 services:
 - docker
-
 sudo: required
-
 env:
   global:
-  - secure: fbXgFfFNOyTnLwKArHgIBH1QVI4x+vEQcKBQD2KLf6cI1wJ5bIxPvWSgShG8uJGnbghBKRob/Q8EtB+bkSqDzB9i8amReJx9BKbKiaAZx1ra3bAdsDqqEgfrz7ENl60CuWYj38OJmGOc+5KT+G3JePdBjKRiGwoh1dlPKJ0DXptcHhmzvZhXjuRkn2n0IdF6UZlYmfDglYCfwwCy/nljmkbFUDTzjUnTHCb1kADmpXZOweynDDlCtp9ut4EYO+SQKYA/r+jJMkYzYfHAIqfZbcLqucqI+2uyYDToPeSPKXlTeFti4j2eSS/HMK+t1TpxxMz3vs83IIAlNcidycG+GpOTqdRzqSylypTxqah+dERKybm5P279MulunbczsGxRSN4SZEn9hNU6P7uKM0rVT/0RblGnmCqFeeVxEW6/hF4vp+CBUlDg91y3ByPgB4LPfEGnQe1CtMkCU5AgHcxQ1ZaRC2BZugaKbkgugqEl/meDBgFheskH9dAPUzfNnKxgqftHOvvzFCATL928MoTMiCYcNyffB0FAnuxROJ0MgDfmfOnp2EH7hcokz6cuQhLgfBcl1sy9CaslX7LypRA0oiji6vsMpxik78G8dELGHJK/vutdK7jszddZ4+607AeRvAaui5Mq4YeScsdruRheWgYT1RRo0HeCxS8fSqxWy/c=
-
+    secure: Sc67qHkxEU2ZCJvajsaW4o5gDl8HHuN8XkL0MqLxB5uhFIbwnIqUSOgv1YXFSLeMRb4NJvk4x5bLjFKjHI/OS+RHXlAAEmcwJtEPUbmeb2XK+SRaRal21ir74053uuNG5+3wve59XiOvb7rRINK2jHlBt+2Tq2/AKdgjKH4pkhXYmUg6u64Zkfg+JikO5PkKk3NDVYDg3PAWyl6ApnFHL/PNv1hlMCat2awY5ZW1ptzyoBy/SbdGDJ49IaxKRE9OjseGWM9fjCo8wMbKquz6xp8gHF9Tn1OTpdNXKMn3D/X31xRZU4Brh2rXkUGeg7M85o6P+4xRredQPryhi1SwNpq2u5XKZRqL6Og2Y3PgJSoPLygtbQaFfQ+Rb0zXmLf15AHMTAa0kAFuilM/5bO8VJGcydEHhhaM3HDcST47AIozXOQaXHq4+CLqHuaKutOw8JDRlxxeLlvugy1wogusz1NDmtJ5D41ZRY78FsvFZ+fqxR5nG56SNBB35B5GGQvZAlVuTSmbjv9E0e+b/4BdVvia5nWPUC/xnYe7xhQDqnpE9gGJ033RCDFuXiF4qC7RCaGpxawdKovVE0VJBScnOjIgUpQvjCgjcqOuxTxL4uSeAOcKL1ppIFwX/tPKcllsEdHdvBxvGowoJGZn9Jux8Em9wDAb1Dr6mwW11qnw+vc=
 install:
-  # - go get honnef.co/go/tools/cmd/staticcheck
-  # - go get -u golang.org/x/lint/golint
-  - git submodule update --init
-  - go mod download
-
+- git submodule update --init
+- go mod download
 before_script:
-  - go vet ./...
-  - go build ./...
-  - go test -run xxxx ./...
-
+- go vet ./...
+- go build ./...
+- go test -run xxxx ./...
 script:
-  - go test -short -failfast -coverprofile=coverage.txt ./...
-
+- go test -short -failfast -coverprofile=coverage.txt ./...
 after_success:
 - bash <(curl -s https://codecov.io/bash)
-
 before_deploy:
-  - make cli
-  - make docker-build
-
+- make cli
+- make docker-build
 deploy:
   provider: releases
   skip_cleanup: true
@@ -42,11 +30,9 @@ deploy:
   on:
     tags: true
     repo: bonedady/go-indexed
-
 notifications:
   email: false
-
 cache:
   directories:
-    - $GOPATH/pkg/mod
-    - $HOME/.cache/go-build
+  - "$GOPATH/pkg/mod"
+  - "$HOME/.cache/go-build"
