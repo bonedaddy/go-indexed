@@ -55,23 +55,36 @@ func main() {
 	}
 	app.Commands = cli.Commands{
 		&cli.Command{
-			Name:  "discord-bot",
-			Usage: "starts the discord indexed finance bot",
-			Action: func(c *cli.Context) error {
-				client, err := discord.NewClient(c.String("discord.token"), bc)
-				if err != nil {
-					return err
-				}
-				sc := make(chan os.Signal, 1)
-				signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-				<-sc
-				return client.Close()
-			},
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "discord.token",
-					Usage:   "the discord api token",
-					EnvVars: []string{"DISCORD_TOKEN"},
+			Name:  "discord",
+			Usage: "discord bot management",
+			Subcommands: cli.Commands{
+				&cli.Command{
+					Name:  "ndx-bot",
+					Usage: "starts NDXBot",
+					Action: func(c *cli.Context) error {
+						client, err := discord.NewClient(c.String("discord.token"), bc)
+						if err != nil {
+							return err
+						}
+						sc := make(chan os.Signal, 1)
+						signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+						<-sc
+						return client.Close()
+					},
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:    "discord.token",
+							Usage:   "the discord api token",
+							EnvVars: []string{"DISCORD_TOKEN"},
+						},
+					},
+				},
+				&cli.Command{
+					Name:  "price-bot",
+					Usage: "starts a price monitoring bot",
+					Action: func(c *cli.Context) error {
+						return errors.New("not yet implemented")
+					},
 				},
 			},
 		},
