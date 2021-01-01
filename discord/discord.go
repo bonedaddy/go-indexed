@@ -34,81 +34,10 @@ type Client struct {
 func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, error) {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(ctx)
-	for _, watcher := range cfg.Watchers {
-		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
-		if err != nil {
-			cancel()
-			return nil, err
-		}
-		wg.Add(1)
-		go func(name string) {
-			defer wg.Done()
-			if err := watcherBot.Open(); err != nil {
-				log.Printf("failed to create watcher %s with error: %s", name, err)
-				return
-			}
-			ticker := time.NewTicker(time.Second * 2)
-			defer ticker.Stop()
-			var lastPrice float64
-			for {
-				select {
-				case <-ctx.Done():
-					goto EXIT
-				case <-ticker.C:
-					break
-				}
-				var (
-					price float64
-					err   error
-				)
-				switch strings.ToLower(name) {
-				case "defi5":
-					price, err = bc.Defi5DaiPrice()
-					if err != nil {
-						log.Println("error: ", err)
-						goto EXIT
-					}
-				case "cc10":
-					price, err = bc.Cc10DaiPrice()
-					if err != nil {
-						log.Println("error: ", err)
-						goto EXIT
-					}
-				}
-				priceGreater := false
-				priceLess := false
-				if price > lastPrice {
-					priceGreater = true
-				}
-				if price < lastPrice {
-					priceLess = true
-				}
-				lastPrice = price
-				var status string
-				if priceGreater {
-					status = "📈"
-				}
-				if priceLess {
-					status = "📉"
-				}
-				if !priceLess && !priceGreater {
-					status = "📈📉"
-				}
-				watcherBot.UpdateStatus(0, status)
-				guilds, err := watcherBot.UserGuilds(0, "", "")
-				if err != nil {
-					log.Println("error: ", err)
-				}
-				for _, guild := range guilds {
-					watcherBot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("%s: $%0.2f", name, price))
-				}
-				time.Sleep(time.Second * 2)
-			}
-		EXIT:
-			<-ctx.Done()
-			watcherBot.Close()
-			return
-		}(watcher.Currency)
+	// launch price watcher bots
+	if err := launchWatchers(ctx, wg, cfg, bc); err != nil {
+		cancel()
+		return nil, err
 	}
 	// register the watchers
 	dg, err := discordgo.New("Bot " + cfg.MainDiscordToken)
@@ -251,4 +180,83 @@ func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 		fmt.Println("error sending message: ", err.Error())
 		return
 	}
+}
+
+func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client) error {
+	for _, watcher := range cfg.Watchers {
+		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
+		if err != nil {
+			return err
+		}
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			if err := watcherBot.Open(); err != nil {
+				log.Printf("failed to create watcher %s with error: %s", name, err)
+				return
+			}
+			ticker := time.NewTicker(time.Second * 2)
+			defer ticker.Stop()
+			var lastPrice float64
+			for {
+				select {
+				case <-ctx.Done():
+					goto EXIT
+				case <-ticker.C:
+					break
+				}
+				var (
+					price float64
+					err   error
+				)
+				switch strings.ToLower(name) {
+				case "defi5":
+					price, err = bc.Defi5DaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				case "cc10":
+					price, err = bc.Cc10DaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				}
+				priceGreater := false
+				priceLess := false
+				if price > lastPrice {
+					priceGreater = true
+				}
+				if price < lastPrice {
+					priceLess = true
+				}
+				lastPrice = price
+				var status string
+				if priceGreater {
+					status = "📈"
+				}
+				if priceLess {
+					status = "📉"
+				}
+				if !priceLess && !priceGreater {
+					status = "📈📉"
+				}
+				watcherBot.UpdateStatus(0, status)
+				guilds, err := watcherBot.UserGuilds(0, "", "")
+				if err != nil {
+					log.Println("error: ", err)
+				}
+				for _, guild := range guilds {
+					watcherBot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("%s: $%0.2f", name, price))
+				}
+				time.Sleep(time.Second * 2)
+			}
+		EXIT:
+			<-ctx.Done()
+			watcherBot.Close()
+			return
+		}(watcher.Currency)
+	}
+	return nil
 }
