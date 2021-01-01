@@ -100,6 +100,16 @@ func TestBClient(t *testing.T) {
 					t.Logf("swapping 10 %s costs: %s", name, amt)
 				})
 			}
+			t.Run("EthDaiPrice", func(t *testing.T) {
+				price, err := client.EthDaiPrice()
+				require.NoError(t, err)
+				t.Log(price)
+			})
+			t.Run("Defi5DaiPrice", func(t *testing.T) {
+				price, err := client.Defi5DaiPrice()
+				require.NoError(t, err)
+				t.Log(price)
+			})
 		})
 	})
 
