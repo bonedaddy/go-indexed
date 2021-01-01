@@ -53,6 +53,36 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 	registerHelpCommand(dg, nil, router)
 
 	router.RegisterCmd(&dgc.Command{
+		Name:        "info",
+		Description: "provides information about NDXBot",
+		IgnoreCase:  true,
+		Handler: func(ctx *dgc.Ctx) {
+			base := BaseEmbed()
+			base.Title = "Indexed Finance Bot Information"
+			base.Description = "NDXBot is an unofficial, open-source discord bot that faciltates making read-only queries to the Indexed Finance protocol"
+			base.Fields = []*discordgo.MessageEmbedField{
+				&discordgo.MessageEmbedField{
+					Name:  "Source Code",
+					Value: "https://github.com/bonedaddy/go-indexed/tree/main/discord",
+				},
+				&discordgo.MessageEmbedField{
+					Name:  "Bot Documentation",
+					Value: "https://github.com/bonedaddy/go-indexed/blob/main/docs/DISCORD_BOT.md",
+				},
+				&discordgo.MessageEmbedField{
+					Name:  "Indexed Finance Documentation",
+					Value: "https://docs.indexed.finance/",
+				},
+				&discordgo.MessageEmbedField{
+					Name:  "Support",
+					Value: "star the [github repo](https://github.com/bonedaddy/go-indexed), or [tip some ethereum based cryptos](https://etherscan.io/address/0x5a361a1dfd52538a158e352d21b5b622360a7c13). all tipped funds will be reinvested into Indexed Finance",
+				},
+			}
+			ctx.RespondEmbed(base)
+		},
+	})
+
+	router.RegisterCmd(&dgc.Command{
 		Name:        "pool",
 		Description: "command group for interacting with Indexed pools",
 		SubCommands: []*dgc.Command{

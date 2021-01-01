@@ -161,7 +161,7 @@ func renderDefaultGeneralHelpEmbed(router *dgc.Router, page int) (*discordgo.Mes
 	return &discordgo.MessageEmbed{
 		Type:        "rich",
 		Title:       "Command List (Page " + strconv.Itoa(page) + "/" + strconv.Itoa(pageAmount) + ")",
-		Description: "These are all the available commands. Type `" + prefix + " help <command name>` to find out more about a specific command.",
+		Description: "These are all the available commands. Type `" + prefix + " help <command name>` to find out more about a specific command.\n\n**Disclaimer: NDXBot will never contact you for your private keys, seed phrases, or other personal/sensitive information.**\n\nDetailed documentation about NDXBot is [available on github](https://github.com/bonedaddy/go-indexed/blob/main/docs/DISCORD_BOT.md)",
 		Timestamp:   time.Now().Format(time.RFC3339),
 		Color:       0xffff00,
 		Fields:      fields,
