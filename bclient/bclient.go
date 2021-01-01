@@ -127,6 +127,11 @@ func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) 
 // Uniswap returns a uniswap client helper
 func (c *Client) Uniswap() *uniswap.Client { return c.uc }
 
+// Close terminates the blockchain connection
+func (c *Client) Close() {
+	c.ec.Close()
+}
+
 func guessTokenName(address string) string {
 	if address == "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2" {
 		return "Maker"

@@ -17,15 +17,14 @@ var (
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
 type Client struct {
-	token string
-	s     *discordgo.Session
-	bc    *bclient.Client
-	r     *dgc.Router
+	s  *discordgo.Session
+	bc *bclient.Client
+	r  *dgc.Router
 }
 
 // NewClient provides a wrapper around discordgo
-func NewClient(token string, bc *bclient.Client) (*Client, error) {
-	dg, err := discordgo.New("Bot " + token)
+func NewClient(cfg *Config, bc *bclient.Client) (*Client, error) {
+	dg, err := discordgo.New("Bot " + cfg.MainDiscordToken)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,7 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 		},
 	})
 
-	client := &Client{token: token, s: dg, bc: bc, r: router}
+	client := &Client{s: dg, bc: bc, r: router}
 
 	// register our custom help command
 	registerHelpCommand(dg, nil, router)
@@ -123,7 +122,7 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 		Name:        "uniswap",
 		Description: "command group for interacting with Indexed uniswap related contracts",
 		Usage:       " uniswap <subcommand> <args...>",
-		Example:     " uniswap exchange-amount eth-defi5 1.0",
+		Example:     " uniswap exchange-amount eth-defi5 1.0\n!ndx uniswap exchange-rate defi5-dai",
 		SubCommands: []*dgc.Command{
 			&dgc.Command{
 				Name:        "exchange-amount",
