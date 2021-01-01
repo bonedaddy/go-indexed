@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/bonedaddy/dgc v0.0.1
-	github.com/bwmarrin/discordgo v0.22.0
+	github.com/bwmarrin/discordgo v0.22.1-0.20201217190221-8d6815dde7ed
 	github.com/ethereum/go-ethereum v1.9.25
 	github.com/shopspring/decimal v1.2.0
 	github.com/stretchr/testify v1.4.0
