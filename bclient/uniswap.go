@@ -25,6 +25,25 @@ func (c *Client) Cc10EthPairAddress() common.Address {
 	return uniswap.GeneratePairAddress(CC10TokenAddress, WETHTokenAddress)
 }
 
+// NdxDaiPrice returns the price of NDX in terms of DAI
+func (c *Client) NdxDaiPrice() (float64, error) {
+	ndxEthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "ndx-eth")
+	if err != nil {
+		return 0, err
+	}
+	ndxEthPriceDec := utils.ToDecimal(ndxEthPrice, 18)
+	ethDaiPrice, err := c.EthDaiPrice()
+	if err != nil {
+		return 0, err
+	}
+	ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+	// derive the price of DEFI5 by getting the amount of ETH you would get from
+	// 1 DEFI5 token, and converting that into DAI
+	edF, _ := ethDaiPriceDec.Float64()
+	neF, _ := ndxEthPriceDec.Float64()
+	return edF * neF, nil
+}
+
 // Cc10DaiPrice returns the price of CC10 in terms of DAI
 func (c *Client) Cc10DaiPrice() (float64, error) {
 	cc10EthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "cc10-eth")
