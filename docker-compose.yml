@@ -2,6 +2,6 @@ version: "3.5"
 services:
   ndx-bot:
     image: gondx:latest
-    environment: 
-      - INFURA_API_KEY="..."
-      - DISCORD_TOKEN="..."
+    network_mode: host
+    volumes: 
+      - ./config.yml:/config.yml
