@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -39,8 +40,17 @@ func main() {
 			Usage: "address to lookup in queries",
 			Value: "0x5a361A1dfd52538A158e352d21B5b622360a7C13",
 		},
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"cfg"},
+			Usage:   "path to discord bot configuration file",
+			Value:   "config.yml",
+		},
 	}
 	app.Before = func(c *cli.Context) error {
+		if c.String("config") != "" {
+			return nil
+		}
 		var err error
 		if c.String("infura.api_key") != "" {
 			var websockets bool
@@ -59,10 +69,30 @@ func main() {
 			Usage: "discord bot management",
 			Subcommands: cli.Commands{
 				&cli.Command{
+					Name:  "gen-config",
+					Usage: "generate ndx bot config file",
+					Action: func(c *cli.Context) error {
+						return discord.NewConfig(c.String("config"))
+					},
+				},
+				&cli.Command{
 					Name:  "ndx-bot",
 					Usage: "starts NDXBot",
 					Action: func(c *cli.Context) error {
-						client, err := discord.NewClient(c.String("discord.token"), bc)
+						cfg, err := discord.LoadConfig(c.String("config"))
+						if err != nil {
+							return err
+						}
+						if cfg.InfuraAPIKey != "" {
+							bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
+						} else {
+							bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
+						}
+						if err != nil {
+							return err
+						}
+						defer bc.Close()
+						client, err := discord.NewClient(context.Background(), cfg, bc)
 						if err != nil {
 							return err
 						}

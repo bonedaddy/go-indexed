@@ -163,8 +163,11 @@ func renderDefaultGeneralHelpEmbed(router *dgc.Router, page int) (*discordgo.Mes
 		Title:       "Command List (Page " + strconv.Itoa(page) + "/" + strconv.Itoa(pageAmount) + ")",
 		Description: "These are all the available commands. Type `" + prefix + " help <command name>` to find out more about a specific command.\n\n**Disclaimer: NDXBot will never contact you for your private keys, seed phrases, or other personal/sensitive information.**\n\nDetailed documentation about NDXBot is [available on github](https://github.com/bonedaddy/go-indexed/blob/main/docs/DISCORD_BOT.md)",
 		Timestamp:   time.Now().Format(time.RFC3339),
-		Color:       0xffff00,
+		Color:       0x00ff00,
 		Fields:      fields,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: "https://pbs.twimg.com/profile_images/1342395531318976518/kIv5abLc_400x400.jpg",
+		},
 	}, page
 }
 
@@ -179,7 +182,8 @@ func renderDefaultSpecificHelpEmbed(ctx *dgc.Ctx, command *dgc.Command) *discord
 			Type:      "rich",
 			Title:     "Error",
 			Timestamp: time.Now().Format(time.RFC3339),
-			Color:     0xff0000,
+
+			Color: 0xff0000,
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:   "Message",
@@ -212,7 +216,10 @@ func renderDefaultSpecificHelpEmbed(ctx *dgc.Ctx, command *dgc.Command) *discord
 		Title:       "Command Information",
 		Description: "Displaying the information for the `" + command.Name + "` command.",
 		Timestamp:   time.Now().Format(time.RFC3339),
-		Color:       0xffff00,
+		Color:       0x00ff00,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: "https://pbs.twimg.com/profile_images/1342395531318976518/kIv5abLc_400x400.jpg",
+		},
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "Name",

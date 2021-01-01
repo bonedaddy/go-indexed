@@ -1,2 +1,2 @@
 #! /bin/sh
-/bin/gondx discord ndx-bot
+/bin/gondx --config /config.yml discord ndx-bot

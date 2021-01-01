@@ -1,8 +1,12 @@
 package discord
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
@@ -17,20 +21,33 @@ var (
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
 type Client struct {
-	token string
-	s     *discordgo.Session
-	bc    *bclient.Client
-	r     *dgc.Router
+	s  *discordgo.Session
+	bc *bclient.Client
+	r  *dgc.Router
+
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     *sync.WaitGroup
 }
 
 // NewClient provides a wrapper around discordgo
-func NewClient(token string, bc *bclient.Client) (*Client, error) {
-	dg, err := discordgo.New("Bot " + token)
+func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, error) {
+	wg := &sync.WaitGroup{}
+	ctx, cancel := context.WithCancel(ctx)
+	// launch price watcher bots
+	if err := launchWatchers(ctx, wg, cfg, bc); err != nil {
+		cancel()
+		return nil, err
+	}
+	// register the watchers
+	dg, err := discordgo.New("Bot " + cfg.MainDiscordToken)
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 
 	if err := dg.Open(); err != nil {
+		cancel()
 		return nil, err
 	}
 	if err := dg.UpdateListeningStatus("!ndx help"); err != nil {
@@ -47,7 +64,7 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 		},
 	})
 
-	client := &Client{token: token, s: dg, bc: bc, r: router}
+	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg}
 
 	// register our custom help command
 	registerHelpCommand(dg, nil, router)
@@ -123,7 +140,7 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 		Name:        "uniswap",
 		Description: "command group for interacting with Indexed uniswap related contracts",
 		Usage:       " uniswap <subcommand> <args...>",
-		Example:     " uniswap exchange-amount eth-defi5 1.0",
+		Example:     " uniswap exchange-amount eth-defi5 1.0\n!ndx uniswap exchange-rate defi5-dai",
 		SubCommands: []*dgc.Command{
 			&dgc.Command{
 				Name:        "exchange-amount",
@@ -131,6 +148,13 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 				Usage:       " uniswap exchange-amount <direction> <amount>",
 				Example:     " uniswap exchange-amount eth-defi5 1.0\n!ndx uniswap exchange-amount defi5-eth 1.0",
 				Handler:     client.uniswapExchangeAmountHandler,
+			},
+			&dgc.Command{
+				Name:        "exchange-rate",
+				Description: "returns the exchange rate for a given pair. the <direction> key semantics are the same as with the exchange-amount command",
+				Usage:       " uniswap exchange-rate <direction>",
+				Example:     " uniswap exchange-rate defi5-dai (returns the value of defi5 in terms of dai)",
+				Handler:     client.uniswapExchangeRateHandler,
 			},
 		},
 		Handler: func(ctx *dgc.Ctx) {
@@ -146,6 +170,8 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 
 // Close terminates the discordgo session
 func (c *Client) Close() error {
+	c.cancel()
+	c.wg.Wait()
 	return c.s.Close()
 }
 
@@ -154,4 +180,91 @@ func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 		fmt.Println("error sending message: ", err.Error())
 		return
 	}
+}
+
+func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client) error {
+	for _, watcher := range cfg.Watchers {
+		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
+		if err != nil {
+			return err
+		}
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			if err := watcherBot.Open(); err != nil {
+				log.Printf("failed to create watcher %s with error: %s", name, err)
+				return
+			}
+			ticker := time.NewTicker(time.Second * 2)
+			defer ticker.Stop()
+			var (
+				lastPrice float64
+				status    = "📊"
+			)
+			for {
+				select {
+				case <-ctx.Done():
+					goto EXIT
+				case <-ticker.C:
+					break
+				}
+				var (
+					price float64
+					err   error
+				)
+				switch strings.ToLower(name) {
+				case "defi5":
+					price, err = bc.Defi5DaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				case "cc10":
+					price, err = bc.Cc10DaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				case "ndx":
+					price, err = bc.NdxDaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				}
+				var pricePercentChange float64
+				// calculate percentage change
+				pricePercentChange = (price - lastPrice) / lastPrice
+				priceGreater := false
+				priceLess := false
+				if price > lastPrice {
+					priceGreater = true
+				}
+				if price < lastPrice {
+					priceLess = true
+				}
+				lastPrice = price
+				if priceGreater {
+					status = fmt.Sprintf("%s %0.2f", "📈", pricePercentChange)
+				}
+				if priceLess {
+					status = fmt.Sprintf("%s %0.2f", "📉", pricePercentChange)
+				}
+				watcherBot.UpdateStatus(0, status)
+				guilds, err := watcherBot.UserGuilds(0, "", "")
+				if err != nil {
+					log.Println("error: ", err)
+				}
+				for _, guild := range guilds {
+					watcherBot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("%s: $%0.2f", name, price))
+				}
+				time.Sleep(time.Second * 2)
+			}
+		EXIT:
+			<-ctx.Done()
+			watcherBot.Close()
+			return
+		}(watcher.Currency)
+	}
+	return nil
 }

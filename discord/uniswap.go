@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -35,4 +36,50 @@ func (c *Client) uniswapExchangeAmountHandler(ctx *dgc.Ctx) {
 	ctx.RespondText(
 		fmt.Sprintf("swapping %v-%s will yield approximately %0.2f-%s\nnote: all prices are approximates", amtF, inPair, exchF, outPair),
 	)
+}
+
+func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
+	arguments := ctx.Arguments
+	direction := arguments.Get(0).Raw()
+	// valid the allowed currencies
+	switch strings.ToLower(direction) {
+	case "defi5-dai":
+		price, err := c.bc.Defi5DaiPrice()
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("defi5 dai price fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("DEFI5-DAI exchange rate: %0.2f", price))
+		return
+	case "cc10-dai":
+		price, err := c.bc.Cc10DaiPrice()
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("cc10 dai price fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("CC10-DAI exchange rate: %0.2f", price))
+		return
+	case "eth-dai":
+		price, err := c.bc.EthDaiPrice()
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("cc10 dai price fetch failed: ", err)
+			return
+		}
+		ctx.RespondText("ETH-DAI exchange rate: " + price.String())
+		return
+	case "ndx-dai":
+		price, err := c.bc.NdxDaiPrice()
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("ndx dai price fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("NDX-DAI exchange rate: %0.2f", price))
+	default:
+		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai")
+		return
+	}
 }
