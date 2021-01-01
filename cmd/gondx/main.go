@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -82,18 +83,16 @@ func main() {
 						if err != nil {
 							return err
 						}
-						if bc != nil {
-							if cfg.InfuraAPIKey != "" {
-								bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
-							} else {
-								bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
-							}
-							if err != nil {
-								return err
-							}
-							defer bc.Close()
+						if cfg.InfuraAPIKey != "" {
+							bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
+						} else {
+							bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
 						}
-						client, err := discord.NewClient(cfg, bc)
+						if err != nil {
+							return err
+						}
+						defer bc.Close()
+						client, err := discord.NewClient(context.Background(), cfg, bc)
 						if err != nil {
 							return err
 						}

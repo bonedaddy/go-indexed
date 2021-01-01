@@ -1,8 +1,12 @@
 package discord
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
@@ -20,16 +24,80 @@ type Client struct {
 	s  *discordgo.Session
 	bc *bclient.Client
 	r  *dgc.Router
+
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     *sync.WaitGroup
 }
 
 // NewClient provides a wrapper around discordgo
-func NewClient(cfg *Config, bc *bclient.Client) (*Client, error) {
+func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, error) {
+	wg := &sync.WaitGroup{}
+	ctx, cancel := context.WithCancel(ctx)
+	for _, watcher := range cfg.Watchers {
+		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
+		if err != nil {
+			cancel()
+			return nil, err
+		}
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			if err := watcherBot.Open(); err != nil {
+				log.Printf("failed to create watcher %s with error: %s", name, err)
+				return
+			}
+			ticker := time.NewTicker(time.Second * 2)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					goto EXIT
+				case <-ticker.C:
+					break
+				}
+				var (
+					price float64
+					err   error
+				)
+				switch strings.ToLower(name) {
+				case "defi5":
+					price, err = bc.Defi5DaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				case "cc10":
+					price, err = bc.Cc10DaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
+				}
+				guilds, err := watcherBot.UserGuilds(0, "", "")
+				if err != nil {
+					log.Println("error: ", err)
+				}
+				for _, guild := range guilds {
+					watcherBot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("%s: $%0.2f", name, price))
+				}
+				time.Sleep(time.Second * 2)
+			}
+		EXIT:
+			<-ctx.Done()
+			watcherBot.Close()
+			return
+		}(watcher.Currency)
+	}
+	// register the watchers
 	dg, err := discordgo.New("Bot " + cfg.MainDiscordToken)
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 
 	if err := dg.Open(); err != nil {
+		cancel()
 		return nil, err
 	}
 	if err := dg.UpdateListeningStatus("!ndx help"); err != nil {
@@ -46,7 +114,7 @@ func NewClient(cfg *Config, bc *bclient.Client) (*Client, error) {
 		},
 	})
 
-	client := &Client{s: dg, bc: bc, r: router}
+	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg}
 
 	// register our custom help command
 	registerHelpCommand(dg, nil, router)
@@ -152,6 +220,8 @@ func NewClient(cfg *Config, bc *bclient.Client) (*Client, error) {
 
 // Close terminates the discordgo session
 func (c *Client) Close() error {
+	c.cancel()
+	c.wg.Wait()
 	return c.s.Close()
 }
 
