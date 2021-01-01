@@ -73,3 +73,7 @@ These are the contract bindings for the Indexed UniswapV2 Oracle
 # bindings/uniswapv2
 
 These are contract bindings for uniswapv2 itself
+
+# Support
+
+Support development of go-indexed by sending tips to [`0x5a361a1dfd52538a158e352d21b5b622360a7c13`](https://etherscan.io/address/0x5a361a1dfd52538a158e352d21b5b622360a7c13), all funds received will be re-invested into Indexed Finance via governance token (NDX) purchases, or pool token (defi5, cc10, etc...) purchases.
