@@ -2,35 +2,29 @@ package discord
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
+	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	// 0    1           2
-	// !ndx pool-tokens <pool-name>
-	ip, err := c.getIndexPool(args[2])
+func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
+	arguments := ctx.Arguments
+	poolName := arguments.Get(0).Raw()
+	ip, err := c.getIndexPool(poolName)
 	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
+		ctx.RespondText("invalid pool")
 		return
 	}
 	tokens, err := c.bc.PoolTokensFor(ip)
 	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "failed to lookup current tokens: "+err.Error())
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
+		ctx.RespondText("failed to lookup current tokens")
 		return
 	}
 	tokensEmbed := BaseEmbed()
-	tokensEmbed.Title = fmt.Sprintf("%s Current Pool Tokens", strings.ToUpper(args[2]))
+	tokensEmbed.Title = fmt.Sprintf("%s Current Pool Tokens", strings.ToUpper(poolName))
 
 	for name, addr := range tokens {
 		tokensEmbed.Fields = append(tokensEmbed.Fields, &discordgo.MessageEmbedField{
@@ -38,32 +32,23 @@ func (c *Client) poolTokens(s *discordgo.Session, m *discordgo.MessageCreate, ar
 			Value: addr.String(),
 		})
 	}
-	c.s.ChannelMessageSendEmbed(m.ChannelID, tokensEmbed)
+	ctx.RespondEmbed(tokensEmbed)
 }
 
-func (c *Client) poolBalance(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	// 0    1            2      3
-	// !ndx pool-balance <pool> <account>
-	ip, err := c.getIndexPool(args[2])
+func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
+	arguments := ctx.Arguments
+	poolName := arguments.Get(0).Raw()
+	accountAddr := arguments.Get(1).Raw()
+	ip, err := c.getIndexPool(poolName)
 	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, "invalid pool")
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
+		ctx.RespondText("invalid pool")
 		return
 	}
+	bal, err := bclient.BalanceOfDecimal(ip, common.HexToAddress(accountAddr))
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "failed to get index pool binding")
-		log.Println("failed to get index pool binding")
+		ctx.RespondText("failed to lookup balance")
 		return
-	}
-	bal, err := bclient.BalanceOfDecimal(ip, common.HexToAddress(args[3]))
-	if err != nil {
-		_, err = c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("failed to lookup balance: %s", err))
-		if err != nil {
-			log.Println("failed to send channel message")
-		}
 	}
 	balF, _ := bal.Float64()
-	c.s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("account balance for %s: %0.2f", args[3], balF))
+	ctx.RespondText(fmt.Sprintf("account balance for %s: %0.2f", accountAddr, balF))
 }

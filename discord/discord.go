@@ -3,8 +3,8 @@ package discord
 import (
 	"fmt"
 	"log"
-	"strings"
 
+	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
 )
@@ -20,6 +20,7 @@ type Client struct {
 	token string
 	s     *discordgo.Session
 	bc    *bclient.Client
+	r     *dgc.Router
 }
 
 // NewClient provides a wrapper around discordgo
@@ -28,11 +29,117 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := &Client{token: token, s: dg, bc: bc}
-	client.s.AddHandler(client.messageCreate)
+
 	if err := dg.Open(); err != nil {
 		return nil, err
 	}
+	if err := dg.UpdateListeningStatus("!ndx help"); err != nil {
+		log.Println("failed to udpate streaming status: ", err)
+	}
+
+	// declare the base router
+	router := dgc.Create(&dgc.Router{
+		Prefixes:         []string{"!ndx"},
+		IgnorePrefixCase: true,  // allow any case of the prefix
+		BotsAllowed:      false, // do not allow bots
+		PingHandler: func(ctx *dgc.Ctx) {
+			ctx.RespondText("ping")
+		},
+	})
+
+	client := &Client{token: token, s: dg, bc: bc, r: router}
+
+	// register our custom help command
+	registerHelpCommand(dg, nil, router)
+
+	router.RegisterCmd(&dgc.Command{
+		Name:        "info",
+		Description: "provides information about NDXBot",
+		IgnoreCase:  true,
+		Handler: func(ctx *dgc.Ctx) {
+			base := BaseEmbed()
+			base.Title = "Indexed Finance Bot Information"
+			base.Description = "NDXBot is an unofficial, open-source discord bot that faciltates making read-only queries to the Indexed Finance protocol"
+			base.Fields = []*discordgo.MessageEmbedField{
+				&discordgo.MessageEmbedField{
+					Name:  "Source Code",
+					Value: "https://github.com/bonedaddy/go-indexed/tree/main/discord",
+				},
+				&discordgo.MessageEmbedField{
+					Name:  "Bot Documentation",
+					Value: "https://github.com/bonedaddy/go-indexed/blob/main/docs/DISCORD_BOT.md",
+				},
+				&discordgo.MessageEmbedField{
+					Name:  "Indexed Finance Documentation",
+					Value: "https://docs.indexed.finance/",
+				},
+				&discordgo.MessageEmbedField{
+					Name:  "Support",
+					Value: "star the [github repo](https://github.com/bonedaddy/go-indexed), or [tip some ethereum based cryptos](https://etherscan.io/address/0x5a361a1dfd52538a158e352d21b5b622360a7c13). all tipped funds will be reinvested into Indexed Finance",
+				},
+			}
+			ctx.RespondEmbed(base)
+		},
+	})
+
+	router.RegisterCmd(&dgc.Command{
+		Name:        "pool",
+		Description: "command group for interacting with Indexed pools",
+		SubCommands: []*dgc.Command{
+			&dgc.Command{
+				Name:        "current-tokens",
+				Description: "returns the current tokens basketed into a pool",
+				Usage:       " pool current-tokens <pool-name>",
+				Example:     " pool current-tokens defi5",
+				IgnoreCase:  true,
+				Handler:     client.poolTokensHandler,
+			},
+			&dgc.Command{
+				Name:        "balance",
+				Description: "returns the current balance of indexed pool tokens held by an account",
+				Usage:       " pool balance <pool-name> <account>",
+				Example:     " pool balance defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
+				IgnoreCase:  true,
+				Handler:     client.poolBalanceHandler,
+			},
+		},
+		Usage:   " pool <subcommand> <args...>",
+		Example: " pool current-tokens defi5\n!ndx help pool current-tokens",
+		Handler: func(ctx *dgc.Ctx) {
+			ctx.RespondText("invalid invocation please run a specific subcommand")
+		},
+	})
+
+	router.RegisterCmd(&dgc.Command{
+		Name:        "stake-earned",
+		Description: "returns the amount of stake earned, currently supports defi5 and univ2-eth-defi5 stake contracts",
+		Usage:       " stake-earned <stake-type> <account>",
+		Example:     " stake-earned defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
+		IgnoreCase:  true,
+		Handler:     client.stakeEarnedHandler,
+	})
+
+	router.RegisterCmd(&dgc.Command{
+		Name:        "uniswap",
+		Description: "command group for interacting with Indexed uniswap related contracts",
+		Usage:       " uniswap <subcommand> <args...>",
+		Example:     " uniswap exchange-amount eth-defi5 1.0",
+		SubCommands: []*dgc.Command{
+			&dgc.Command{
+				Name:        "exchange-amount",
+				Description: "returns the amount of tokens received in exchanged for the given pair. \"!ndx uniswap exchange-amount defi5-eth 1.0\" will return the amount of ETH received for swapping 1 DEFI5 to ETH, whereas \"!ndx uniswap exchange-amount eth-defi5 1.0\" will return the amount of DEFI5 received for swapping 1 ETH to DEFI5",
+				Usage:       " uniswap exchange-amount <direction> <amount>",
+				Example:     " uniswap exchange-amount eth-defi5 1.0\n!ndx uniswap exchange-amount defi5-eth 1.0",
+				Handler:     client.uniswapExchangeAmountHandler,
+			},
+		},
+		Handler: func(ctx *dgc.Ctx) {
+			ctx.RespondText("invalid invocation please run a specific subcommand")
+		},
+	})
+
+	router.Initialize(dg)
+
 	log.Println("bot is now running")
 	return client, nil
 }
@@ -42,71 +149,9 @@ func (c *Client) Close() error {
 	return c.s.Close()
 }
 
-// handleCommand processes incoming messages from discord and determines what to do with them
-func (c *Client) handleCommand(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	if len(args) == 1 && args[0] == "!ndx" {
-		c.sendHelp(s, m)
-		return
-	} else if len(args) == 2 && args[0] == "!ndx" && args[1] == "help" {
-		c.sendHelp(s, m)
-		return
-	}
-
-	if len(args) >= 2 {
-		if args[1] == "notify" {
-			c.handleNotif(s, m, args)
-			return
-		}
-		if args[1] == "uniswap" {
-			c.handleUniswap(s, m, args)
-			return
-		}
-	}
-	if len(args) > 2 {
-		switch args[1] {
-		case "pool-tokens":
-			c.poolTokens(s, m, args)
-			return
-		}
-	}
-	if len(args) > 3 {
-		switch args[1] {
-		case "pool-balance":
-			c.poolBalance(s, m, args)
-			return
-		case "stake-earned":
-			c.stakeEarned(s, m, args)
-			return
-		}
-	}
-	c.s.ChannelMessageSend(m.ChannelID, "invalid command invocation")
-}
-
 func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if _, err := s.ChannelMessageSendEmbed(m.ChannelID, helpEmbed); err != nil {
 		fmt.Println("error sending message: ", err.Error())
 		return
 	}
-}
-
-// This function will be called (due to AddHandler above) every time a new
-// message is created on any channel that the autenticated bot has access to.
-func (c *Client) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// Ignore all messages created by the bot itself
-	// This isn't required in this specific example but it's a good practice.
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	// parse the message contents based off string fields
-	args := strings.Fields(m.Content)
-	if len(args) == 0 {
-		return
-	}
-	// ensure the first field is a valid invocation of index bot1
-	if args[0] != "!ndx" {
-		fmt.Println("invalid invocation")
-		return
-	}
-	c.handleCommand(s, m, args)
 }

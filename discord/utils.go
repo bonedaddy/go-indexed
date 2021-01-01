@@ -36,6 +36,6 @@ func BaseEmbed() *discordgo.MessageEmbed {
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: "https://pbs.twimg.com/profile_images/1342395531318976518/kIv5abLc_400x400.jpg",
 		},
-		Color: 0x00ff00,
+		Color: 0xffff00,
 	}
 }
