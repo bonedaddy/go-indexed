@@ -13,11 +13,13 @@ WORKDIR ${BUILD_HOME}
 RUN go mod download
 
 # Build temporal binary
-RUN go build -o /bin/temporal \
+RUN go build -o /bin/gondx \
     -ldflags "-X main.Version=$VERSION" \
     ./cmd/gondx
 
-RUN go build -o /bin/gondx ./cmd/gondx
+FROM alpine
+
+COPY --from=build-env /bin/gondx /bin/gondx
 
 COPY entrypoint.sh /bin/entrypoint.sh
 

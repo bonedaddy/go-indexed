@@ -38,3 +38,4 @@ gen-bindings:
 .PHONY: docker-build
 docker-build:
 	docker build --build-arg VERSION=$(GIT_VERSION) -t bonedaddy/gondx:$(GIT_VERSION) .
+	docker image tag bonedaddy/gondx:$(GIT_VERSION) bonedaddy/gondx:latest
