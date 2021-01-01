@@ -1,3 +1,3 @@
 FROM golang:1.15-alpine
-ADD gondx-arm /gondx-arm
-ENTRYPOINT [ "/gondx-arm"]
+ADD gondx /gondx
+ENTRYPOINT [ "/gondx"]
