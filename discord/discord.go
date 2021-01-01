@@ -132,6 +132,13 @@ func NewClient(token string, bc *bclient.Client) (*Client, error) {
 				Example:     " uniswap exchange-amount eth-defi5 1.0\n!ndx uniswap exchange-amount defi5-eth 1.0",
 				Handler:     client.uniswapExchangeAmountHandler,
 			},
+			&dgc.Command{
+				Name:        "exchange-rate",
+				Description: "returns the exchange rate for a given pair. the <direction> key semantics are the same as with the exchange-amount command",
+				Usage:       " uniswap exchange-rate <direction>\n\nAt the moment the only supported values for <direction> are defi5-dai, cc10-dai, and eth-dai",
+				Example:     " uniswap exchange-rate defi5-dai (returns the value of defi5 in terms of dai)",
+				Handler:     client.uniswapExchangeRateHandler,
+			},
 		},
 		Handler: func(ctx *dgc.Ctx) {
 			ctx.RespondText("invalid invocation please run a specific subcommand")
