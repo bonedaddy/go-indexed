@@ -32,3 +32,7 @@ gen-bindings:
 	abigen --abi abi/IUniswapV2ERC20.json --pkg uniswapv2erc20 --out bindings/uniswapv2/erc20/v2erc20.go
 	abigen --abi abi/IUniswapV2Factory.json --pkg uniswapv2factory --out bindings/uniswapv2/factory/v2factory.go
 	abigen --abi abi/IUniswapV2Callee.json --pkg uniswapv2callee --out bindings/uniswapv2/callee/v2callee.go
+
+.PHONY: docker-build
+docker-build: cli
+	docker build . -t gondx:latest
