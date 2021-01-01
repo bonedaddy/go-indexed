@@ -70,6 +70,14 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		}
 		ctx.RespondText("ETH-DAI exchange rate: " + price.String())
 		return
+	case "ndx-dai":
+		price, err := c.bc.NdxDaiPrice()
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("ndx dai price fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("NDX-DAI exchange rate: %0.2f", price))
 	default:
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai")
 		return

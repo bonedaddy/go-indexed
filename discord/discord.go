@@ -197,7 +197,10 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			}
 			ticker := time.NewTicker(time.Second * 2)
 			defer ticker.Stop()
-			var lastPrice float64
+			var (
+				lastPrice float64
+				status    = "📊"
+			)
 			for {
 				select {
 				case <-ctx.Done():
@@ -222,7 +225,16 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 						log.Println("error: ", err)
 						goto EXIT
 					}
+				case "ndx":
+					price, err = bc.NdxDaiPrice()
+					if err != nil {
+						log.Println("error: ", err)
+						goto EXIT
+					}
 				}
+				var pricePercentChange float64
+				// calculate percentage change
+				pricePercentChange = (price - lastPrice) / lastPrice
 				priceGreater := false
 				priceLess := false
 				if price > lastPrice {
@@ -232,15 +244,11 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 					priceLess = true
 				}
 				lastPrice = price
-				var status string
 				if priceGreater {
-					status = "📈"
+					status = fmt.Sprintf("%s %0.2f", "📈", pricePercentChange)
 				}
 				if priceLess {
-					status = "📉"
-				}
-				if !priceLess && !priceGreater {
-					status = "📈📉"
+					status = fmt.Sprintf("%s %0.2f", "📉", pricePercentChange)
 				}
 				watcherBot.UpdateStatus(0, status)
 				guilds, err := watcherBot.UserGuilds(0, "", "")
