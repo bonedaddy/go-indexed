@@ -34,5 +34,5 @@ gen-bindings:
 	abigen --abi abi/IUniswapV2Callee.json --pkg uniswapv2callee --out bindings/uniswapv2/callee/v2callee.go
 
 .PHONY: docker-build
-docker-build: cli
+docker-build:
 	docker build . -t gondx:latest
