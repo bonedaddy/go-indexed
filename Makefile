@@ -1,6 +1,8 @@
+GIT_VERSION=`git describe --tags`
+
 .PHONY: cli
 cli:
-	go build -o gondx ./cmd/gondx
+	go build -o gondx -ldflags "-X main.Version=$(GIT_VERSION)" ./cmd/gondx
 
 .PHONY: all
 all: copy-abi gen-bindings
@@ -35,4 +37,4 @@ gen-bindings:
 
 .PHONY: docker-build
 docker-build:
-	docker build . -t gondx:latest
+	docker build --build-arg VERSION=$(GIT_VERSION) -t bonedaddy/gondx:$(GIT_VERSION) .

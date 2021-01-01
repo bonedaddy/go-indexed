@@ -17,13 +17,15 @@ import (
 )
 
 var (
-	bc *bclient.Client
+	bc      *bclient.Client
+	Version string
 )
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "gondx"
 	app.Usage = "a CLI application for Indexed Finance"
+	app.Version = Version
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:    "infura.api_key",
