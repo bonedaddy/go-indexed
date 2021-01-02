@@ -12,7 +12,7 @@ WORKDIR ${BUILD_HOME}
 
 RUN go mod download
 
-# Build temporal binary
+# Build gondx binary
 RUN go build -o /bin/gondx \
     -ldflags "-X main.Version=$VERSION" \
     ./cmd/gondx
