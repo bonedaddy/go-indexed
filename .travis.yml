@@ -18,8 +18,7 @@ script:
 after_success:
 - bash <(curl -s https://codecov.io/bash)
 before_deploy:
-- make cli
-- make docker-build
+- make release
 deploy:
   provider: releases
   skip_cleanup: true

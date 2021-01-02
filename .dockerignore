@@ -4,3 +4,6 @@ indexed-uv2oracle
 uniswap-v2-core
 abi
 .git
+release
+config.yml
+./gondx
