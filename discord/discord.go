@@ -195,11 +195,11 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 				log.Printf("failed to create watcher %s with error: %s", name, err)
 				return
 			}
-			ticker := time.NewTicker(time.Second * 2)
+			ticker := time.NewTicker(time.Second * 15) // assumes 15 second block time
 			defer ticker.Stop()
 			var (
-				lastPrice float64
-				status    = "📊"
+				lastPrice    float64
+				lastPriceSet bool
 			)
 			for {
 				select {
@@ -232,24 +232,24 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 						goto EXIT
 					}
 				}
+				// this will only run once per loop
+				if !lastPriceSet {
+					lastPrice = price
+					lastPriceSet = true
+				}
 				var pricePercentChange float64
+				var status string
 				// calculate percentage change
 				pricePercentChange = (price - lastPrice) / lastPrice
-				priceGreater := false
-				priceLess := false
 				if price > lastPrice {
-					priceGreater = true
-				}
-				if price < lastPrice {
-					priceLess = true
+					status = fmt.Sprintf("%s %s%0.4f 🔼", "📈", "%", pricePercentChange)
+				} else if price < lastPrice {
+					status = fmt.Sprintf("%s %s%0.4f ⬇️", "📈", "%", pricePercentChange)
+				} else {
+					// price is same as last update
+					status = fmt.Sprintf("%s %s%0.4f ↕️", "📊", "%", pricePercentChange)
 				}
 				lastPrice = price
-				if priceGreater {
-					status = fmt.Sprintf("%s %0.2f", "📈", pricePercentChange)
-				}
-				if priceLess {
-					status = fmt.Sprintf("%s %0.2f", "📉", pricePercentChange)
-				}
 				watcherBot.UpdateStatus(0, status)
 				guilds, err := watcherBot.UserGuilds(0, "", "")
 				if err != nil {
