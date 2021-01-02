@@ -966,6 +966,7 @@ func (_Stakingbindings *StakingbindingsFilterer) ParseRecovered(log types.Log) (
 	if err := _Stakingbindings.contract.UnpackLog(event, "Recovered", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1099,6 +1100,7 @@ func (_Stakingbindings *StakingbindingsFilterer) ParseRewardAdded(log types.Log)
 	if err := _Stakingbindings.contract.UnpackLog(event, "RewardAdded", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1243,6 +1245,7 @@ func (_Stakingbindings *StakingbindingsFilterer) ParseRewardPaid(log types.Log) 
 	if err := _Stakingbindings.contract.UnpackLog(event, "RewardPaid", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1376,6 +1379,7 @@ func (_Stakingbindings *StakingbindingsFilterer) ParseRewardsDurationUpdated(log
 	if err := _Stakingbindings.contract.UnpackLog(event, "RewardsDurationUpdated", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1520,6 +1524,7 @@ func (_Stakingbindings *StakingbindingsFilterer) ParseStaked(log types.Log) (*St
 	if err := _Stakingbindings.contract.UnpackLog(event, "Staked", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1664,5 +1669,6 @@ func (_Stakingbindings *StakingbindingsFilterer) ParseWithdrawn(log types.Log) (
 	if err := _Stakingbindings.contract.UnpackLog(event, "Withdrawn", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

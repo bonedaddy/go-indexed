@@ -404,6 +404,9 @@ func (_Pairbindings *PairbindingsCaller) GetReserves(opts *bind.CallOpts) (struc
 		Reserve1           *big.Int
 		BlockTimestampLast uint32
 	})
+	if err != nil {
+		return *outstruct, err
+	}
 
 	outstruct.Reserve0 = out[0].(*big.Int)
 	outstruct.Reserve1 = out[1].(*big.Int)
@@ -1074,6 +1077,7 @@ func (_Pairbindings *PairbindingsFilterer) ParseApproval(log types.Log) (*Pairbi
 	if err := _Pairbindings.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1230,6 +1234,7 @@ func (_Pairbindings *PairbindingsFilterer) ParseBurn(log types.Log) (*Pairbindin
 	if err := _Pairbindings.contract.UnpackLog(event, "Burn", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1375,6 +1380,7 @@ func (_Pairbindings *PairbindingsFilterer) ParseMint(log types.Log) (*Pairbindin
 	if err := _Pairbindings.contract.UnpackLog(event, "Mint", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1533,6 +1539,7 @@ func (_Pairbindings *PairbindingsFilterer) ParseSwap(log types.Log) (*Pairbindin
 	if err := _Pairbindings.contract.UnpackLog(event, "Swap", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1667,6 +1674,7 @@ func (_Pairbindings *PairbindingsFilterer) ParseSync(log types.Log) (*Pairbindin
 	if err := _Pairbindings.contract.UnpackLog(event, "Sync", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1820,5 +1828,6 @@ func (_Pairbindings *PairbindingsFilterer) ParseTransfer(log types.Log) (*Pairbi
 	if err := _Pairbindings.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

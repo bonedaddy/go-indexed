@@ -540,5 +540,6 @@ func (_Uniswapv2factory *Uniswapv2factoryFilterer) ParsePairCreated(log types.Lo
 	if err := _Uniswapv2factory.contract.UnpackLog(event, "PairCreated", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
