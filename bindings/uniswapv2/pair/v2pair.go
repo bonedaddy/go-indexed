@@ -404,6 +404,9 @@ func (_Uniswapv2pair *Uniswapv2pairCaller) GetReserves(opts *bind.CallOpts) (str
 		Reserve1           *big.Int
 		BlockTimestampLast uint32
 	})
+	if err != nil {
+		return *outstruct, err
+	}
 
 	outstruct.Reserve0 = out[0].(*big.Int)
 	outstruct.Reserve1 = out[1].(*big.Int)
@@ -1074,6 +1077,7 @@ func (_Uniswapv2pair *Uniswapv2pairFilterer) ParseApproval(log types.Log) (*Unis
 	if err := _Uniswapv2pair.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1230,6 +1234,7 @@ func (_Uniswapv2pair *Uniswapv2pairFilterer) ParseBurn(log types.Log) (*Uniswapv
 	if err := _Uniswapv2pair.contract.UnpackLog(event, "Burn", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1375,6 +1380,7 @@ func (_Uniswapv2pair *Uniswapv2pairFilterer) ParseMint(log types.Log) (*Uniswapv
 	if err := _Uniswapv2pair.contract.UnpackLog(event, "Mint", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1533,6 +1539,7 @@ func (_Uniswapv2pair *Uniswapv2pairFilterer) ParseSwap(log types.Log) (*Uniswapv
 	if err := _Uniswapv2pair.contract.UnpackLog(event, "Swap", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1667,6 +1674,7 @@ func (_Uniswapv2pair *Uniswapv2pairFilterer) ParseSync(log types.Log) (*Uniswapv
 	if err := _Uniswapv2pair.contract.UnpackLog(event, "Sync", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1820,5 +1828,6 @@ func (_Uniswapv2pair *Uniswapv2pairFilterer) ParseTransfer(log types.Log) (*Unis
 	if err := _Uniswapv2pair.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

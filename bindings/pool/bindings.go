@@ -1508,6 +1508,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseApproval(log types.Log) (*Poolbi
 	if err := _Poolbindings.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1652,6 +1653,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGDENORMUPDATED(log types.Log) 
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_DENORM_UPDATED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1796,6 +1798,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGDESIREDDENORMSET(log types.Lo
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_DESIRED_DENORM_SET", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1949,6 +1952,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGEXIT(log types.Log) (*Poolbin
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_EXIT", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2102,6 +2106,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGJOIN(log types.Log) (*Poolbin
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_JOIN", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2235,6 +2240,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGMAXTOKENSUPDATED(log types.Lo
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_MAX_TOKENS_UPDATED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2369,6 +2375,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGMINIMUMBALANCEUPDATED(log typ
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_MINIMUM_BALANCE_UPDATED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2501,6 +2508,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGPUBLICSWAPENABLED(log types.L
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_PUBLIC_SWAP_ENABLED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2664,6 +2672,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGSWAP(log types.Log) (*Poolbin
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_SWAP", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2797,6 +2806,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGSWAPFEEUPDATED(log types.Log)
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_SWAP_FEE_UPDATED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2942,6 +2952,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGTOKENADDED(log types.Log) (*P
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_TOKEN_ADDED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -3085,6 +3096,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGTOKENREADY(log types.Log) (*P
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_TOKEN_READY", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -3218,6 +3230,7 @@ func (_Poolbindings *PoolbindingsFilterer) ParseLOGTOKENREMOVED(log types.Log) (
 	if err := _Poolbindings.contract.UnpackLog(event, "LOG_TOKEN_REMOVED", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -3371,5 +3384,6 @@ func (_Poolbindings *PoolbindingsFilterer) ParseTransfer(log types.Log) (*Poolbi
 	if err := _Poolbindings.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

@@ -464,6 +464,9 @@ func (_Mcapscontroller *McapscontrollerCaller) GetInitialTokensAndBalances(opts 
 		Tokens   []common.Address
 		Balances []*big.Int
 	})
+	if err != nil {
+		return *outstruct, err
+	}
 
 	outstruct.Tokens = out[0].([]common.Address)
 	outstruct.Balances = out[1].([]*big.Int)
@@ -1187,6 +1190,7 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParseCategoryAdded(log types.Lo
 	if err := _Mcapscontroller.contract.UnpackLog(event, "CategoryAdded", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1320,6 +1324,7 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParseCategorySorted(log types.L
 	if err := _Mcapscontroller.contract.UnpackLog(event, "CategorySorted", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1456,6 +1461,7 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParseNewPoolInitializer(log typ
 	if err := _Mcapscontroller.contract.UnpackLog(event, "NewPoolInitializer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1608,6 +1614,7 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParseOwnershipTransferred(log t
 	if err := _Mcapscontroller.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1744,6 +1751,7 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParsePoolInitialized(log types.
 	if err := _Mcapscontroller.contract.UnpackLog(event, "PoolInitialized", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1878,6 +1886,7 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParseTokenAdded(log types.Log) 
 	if err := _Mcapscontroller.contract.UnpackLog(event, "TokenAdded", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2012,5 +2021,6 @@ func (_Mcapscontroller *McapscontrollerFilterer) ParseTokenRemoved(log types.Log
 	if err := _Mcapscontroller.contract.UnpackLog(event, "TokenRemoved", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

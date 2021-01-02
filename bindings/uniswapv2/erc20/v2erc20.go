@@ -684,6 +684,7 @@ func (_Uniswapv2erc20 *Uniswapv2erc20Filterer) ParseApproval(log types.Log) (*Un
 	if err := _Uniswapv2erc20.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -837,5 +838,6 @@ func (_Uniswapv2erc20 *Uniswapv2erc20Filterer) ParseTransfer(log types.Log) (*Un
 	if err := _Uniswapv2erc20.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

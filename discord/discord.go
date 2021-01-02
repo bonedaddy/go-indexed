@@ -195,12 +195,13 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 				log.Printf("failed to create watcher %s with error: %s", name, err)
 				return
 			}
-			ticker := time.NewTicker(time.Second * 2)
+			// set playing status once
+			watcherBot.UpdateStatus(0, "indexed.finance")
+			// this will close whenever the goroutine exits
+			defer watcherBot.Close()
+			// set a ticker for price updates to bare minimum which assumes a 15 second block time
+			ticker := time.NewTicker(time.Second * 15)
 			defer ticker.Stop()
-			var (
-				lastPrice float64
-				status    = "📊"
-			)
 			for {
 				select {
 				case <-ctx.Done():
@@ -216,53 +217,32 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 				case "defi5":
 					price, err = bc.Defi5DaiPrice()
 					if err != nil {
-						log.Println("error: ", err)
-						goto EXIT
+						log.Println("failed to get defi5 dai price error: ", err)
+						continue
 					}
 				case "cc10":
 					price, err = bc.Cc10DaiPrice()
 					if err != nil {
-						log.Println("error: ", err)
-						goto EXIT
+						log.Println("failed to get defi5 dai price error: ", err)
+						continue
 					}
 				case "ndx":
 					price, err = bc.NdxDaiPrice()
 					if err != nil {
-						log.Println("error: ", err)
-						goto EXIT
+						log.Println("failed to get defi5 dai price error: ", err)
+						continue
 					}
 				}
-				var pricePercentChange float64
-				// calculate percentage change
-				pricePercentChange = (price - lastPrice) / lastPrice
-				priceGreater := false
-				priceLess := false
-				if price > lastPrice {
-					priceGreater = true
-				}
-				if price < lastPrice {
-					priceLess = true
-				}
-				lastPrice = price
-				if priceGreater {
-					status = fmt.Sprintf("%s %0.2f", "📈", pricePercentChange)
-				}
-				if priceLess {
-					status = fmt.Sprintf("%s %0.2f", "📉", pricePercentChange)
-				}
-				watcherBot.UpdateStatus(0, status)
 				guilds, err := watcherBot.UserGuilds(0, "", "")
 				if err != nil {
-					log.Println("error: ", err)
+					log.Println("failed to get user guilds error: ", err)
+					continue
 				}
 				for _, guild := range guilds {
 					watcherBot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("%s: $%0.2f", name, price))
 				}
-				time.Sleep(time.Second * 2)
 			}
 		EXIT:
-			<-ctx.Done()
-			watcherBot.Close()
 			return
 		}(watcher.Currency)
 	}
