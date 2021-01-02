@@ -29,7 +29,7 @@ deploy:
   file: release/*
   on:
     tags: true
-    repo: bonedady/go-indexed
+    repo: bonedaddy/go-indexed
 notifications:
   email: false
 cache:
