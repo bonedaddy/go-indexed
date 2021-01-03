@@ -11,6 +11,9 @@ import (
 )
 
 func (c *Client) uniswapExchangeAmountHandler(ctx *dgc.Ctx) {
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
+		return
+	}
 	arguments := ctx.Arguments
 	direction := arguments.Get(0).Raw()
 	amtF, err := strconv.ParseFloat(arguments.Get(1).Raw(), 64)
@@ -39,6 +42,9 @@ func (c *Client) uniswapExchangeAmountHandler(ctx *dgc.Ctx) {
 }
 
 func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
+		return
+	}
 	arguments := ctx.Arguments
 	direction := arguments.Get(0).Raw()
 	// valid the allowed currencies

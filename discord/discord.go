@@ -112,6 +112,10 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Example:     " pool current-tokens defi5",
 				IgnoreCase:  true,
 				Handler:     client.poolTokensHandler,
+				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+				}),
 			},
 			&dgc.Command{
 				Name:        "balance",
@@ -120,6 +124,10 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Example:     " pool balance defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
 				IgnoreCase:  true,
 				Handler:     client.poolBalanceHandler,
+				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+				}),
 			},
 		},
 		Usage:   " pool <subcommand> <args...>",
@@ -136,6 +144,10 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 		Example:     " stake-earned defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
 		IgnoreCase:  true,
 		Handler:     client.stakeEarnedHandler,
+		// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+		RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+			ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+		}),
 	})
 
 	router.RegisterCmd(&dgc.Command{
@@ -150,6 +162,10 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Usage:       " uniswap exchange-amount <direction> <amount>",
 				Example:     " uniswap exchange-amount eth-defi5 1.0\n!ndx uniswap exchange-amount defi5-eth 1.0",
 				Handler:     client.uniswapExchangeAmountHandler,
+				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+				}),
 			},
 			&dgc.Command{
 				Name:        "exchange-rate",
@@ -157,6 +173,10 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Usage:       " uniswap exchange-rate <direction>",
 				Example:     " uniswap exchange-rate defi5-dai (returns the value of defi5 in terms of dai)",
 				Handler:     client.uniswapExchangeRateHandler,
+				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+				}),
 			},
 		},
 		Handler: func(ctx *dgc.Ctx) {
@@ -201,10 +221,12 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			watcherBot.UpdateStatus(0, "indexed.finance")
 			// this will close whenever the goroutine exits
 			defer watcherBot.Close()
-			// set a ticker for price updates to bare minimum which assumes a 15 second block time
-			// ultimately this will depend on how often the database is updated
-			ticker := time.NewTicker(time.Second * 15)
+
+			// set a ticker for price updates to every 30 seconds, roughly every 2 blocks
+      // assuming a 15 second block time
+			ticker := time.NewTicker(time.Second * 30)
 			defer ticker.Stop()
+      
 			for {
 				select {
 				case <-ctx.Done():

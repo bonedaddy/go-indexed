@@ -11,6 +11,10 @@ import (
 )
 
 func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
+		return
+
+	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
 	ip, err := c.getIndexPool(poolName)
@@ -36,6 +40,10 @@ func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
 }
 
 func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
+		return
+
+	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
 	accountAddr := arguments.Get(1).Raw()

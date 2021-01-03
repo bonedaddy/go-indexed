@@ -9,6 +9,10 @@ import (
 )
 
 func (c *Client) stakeEarnedHandler(ctx *dgc.Ctx) {
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
+		return
+
+	}
 	arguments := ctx.Arguments
 	stakeType := arguments.Get(0).Raw()
 	accountAddr := arguments.Get(1).Raw()
