@@ -1,7 +1,27 @@
 version: "3.5"
 services:
   ndx-bot:
-    image: gondx:latest
-    network_mode: host
+    image: bonedaddy/gondx:latest
+    depends_on:
+      - postgres
+    networks:
+      privnet:
+        ipv4_address: 172.16.238.2
     volumes: 
       - ./config.yml:/config.yml
+      - ./indexed.db:/indexed.db
+  postgres:
+    image: postgres:10.12
+    networks:
+      privnet:
+        ipv4_address: 172.16.238.3
+    environment:
+      POSTGRES_DB: "indexed"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password123"
+networks:
+ privnet:
+  driver: bridge
+  ipam:
+    config:
+      - subnet: 172.16.238.0/24

@@ -7,3 +7,4 @@ abi
 release
 config.yml
 ./gondx
+./indexed.db
