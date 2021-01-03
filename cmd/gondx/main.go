@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bonedaddy/go-indexed/discord"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
@@ -94,7 +95,15 @@ func main() {
 							return err
 						}
 						defer bc.Close()
-						client, err := discord.NewClient(context.Background(), cfg, bc)
+						database, err := db.New(&db.Opts{Type: "sqlite", DBName: "indexed"})
+						if err != nil {
+							return err
+						}
+						if err := database.AutoMigrate(); err != nil {
+							database.Close()
+							return err
+						}
+						client, err := discord.NewClient(context.Background(), cfg, bc, database)
 						if err != nil {
 							return err
 						}
