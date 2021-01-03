@@ -112,7 +112,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.poolTokensHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. users allowed 1 request every 60 seconds!")
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
 				}),
 			},
 			&dgc.Command{
@@ -124,7 +124,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.poolBalanceHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. users allowed 1 request every 60 seconds!")
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
 				}),
 			},
 		},
@@ -144,7 +144,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 		Handler:     client.stakeEarnedHandler,
 		// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 		RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-			ctx.RespondText("You are being rate limited. users allowed 1 request every 60 seconds!")
+			ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
 		}),
 	})
 
@@ -162,7 +162,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.uniswapExchangeAmountHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. users allowed 1 request every 60 seconds!")
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
 				}),
 			},
 			&dgc.Command{
@@ -173,7 +173,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.uniswapExchangeRateHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. users allowed 1 request every 60 seconds!")
+					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
 				}),
 			},
 		},
