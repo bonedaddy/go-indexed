@@ -25,6 +25,7 @@ func TestPrice(t *testing.T) {
 			{"NDX", args{"ndx", 2.132}, false},
 			{"CC10", args{"cc10", 3.1434}, false},
 			{"DEFI5", args{"defi5", 4.123}, false},
+			{"ETH", args{"eth", 4.123}, false},
 			{"InvalidAsset", args{"invalidasset", 1}, true},
 		}
 		for _, tt := range tests {
@@ -50,6 +51,7 @@ func TestPrice(t *testing.T) {
 			{"NDX", args{"ndx", 10.101, 11.23}, false},
 			{"CC10", args{"cc10", 12.121, 13.31}, false},
 			{"DEFI5", args{"defi5", 14.141, 15.81}, false},
+			{"ETH", args{"eth", 14.141, 15.81}, false},
 			{"InvalidAsset", args{"invalidasset", 11, 11}, true},
 		}
 		for _, tt := range tests {
@@ -86,6 +88,7 @@ func TestPrice(t *testing.T) {
 			{"NDX", args{"ndx", 3}, false},
 			{"CC10", args{"cc10", 3}, false},
 			{"DEFI5", args{"defi5", 3}, false},
+			{"ETH", args{"eth", 3}, false},
 			{"InvalidAsset", args{"invalidasset", 1}, true},
 		}
 		for _, tt := range tests {
@@ -115,6 +118,7 @@ func TestPrice(t *testing.T) {
 			{"NDX", args{"ndx", 1, 7.821000000000001}, false},
 			{"CC10", args{"cc10", 1, 9.5248}, false},
 			{"DEFI5", args{"defi5", 1, 11.357999999999999}, false},
+			{"ETH", args{"eth", 1, 11.357999999999999}, false},
 			{"InvalidAsset", args{"invalidasset", 1, 0}, true},
 		}
 		for _, tt := range tests {
@@ -157,6 +161,7 @@ func TestPrice(t *testing.T) {
 			{"NDX", args{"ndx", 1, 7.911819887429642}, false},
 			{"CC10", args{"cc10", 1, 5.044410510911751}, false},
 			{"DEFI5", args{"defi5", 1, 3.6082949308755756}, false},
+			{"ETH", args{"eth", 1, 3.6082949308755756}, false},
 			{"InvalidAsset", args{"invalidasset", 1, 0}, true},
 		}
 		for _, tt := range tests {
