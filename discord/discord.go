@@ -285,7 +285,6 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 			}
 			continue
 		default:
-			log.Println("unsupported name: ", name)
 			return errors.New("unsupported name: " + name)
 		}
 	}
@@ -326,8 +325,7 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 				continue
 			}
 		default:
-			log.Println("unsupported name: ", name)
-			continue
+			return errors.New("unsupported name: " + name)
 		}
 		guilds, err := bot.UserGuilds(0, "", "")
 		if err != nil {
