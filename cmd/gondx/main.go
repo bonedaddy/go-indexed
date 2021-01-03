@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -109,17 +110,23 @@ func main() {
 								if err != nil {
 									return err
 								}
+								defer database.Close()
 								if err := database.AutoMigrate(); err != nil {
-									database.Close()
 									return err
 								}
-								defer database.Close()
+								wg := &sync.WaitGroup{}
+								wg.Add(1)
 								// launch database price updater loop
-								dbPriceUpdateLoop(ctx, bc, database)
+								go func() {
+									defer wg.Done()
+									dbPriceUpdateLoop(ctx, bc, database)
+								}()
+
 								sc := make(chan os.Signal, 1)
 								signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 								<-sc
 								cancel()
+								wg.Wait()
 								return nil
 							},
 						},
@@ -168,9 +175,13 @@ func main() {
 
 							return err
 						}
-
+						wg := &sync.WaitGroup{}
+						wg.Add(1)
 						// launch database price updater loop
-						go dbPriceUpdateLoop(ctx, bc, database)
+						go func() {
+							defer wg.Done()
+							dbPriceUpdateLoop(ctx, bc, database)
+						}()
 						client, err := discord.NewClient(ctx, cfg, bc, database)
 						if err != nil {
 							return err
@@ -179,6 +190,7 @@ func main() {
 						signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 						<-sc
 						cancel()
+						wg.Wait()
 						return client.Close()
 					},
 					Flags: []cli.Flag{
