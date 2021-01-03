@@ -1,6 +1,8 @@
 package db
 
 import (
+	"errors"
+	"math"
 	"time"
 
 	"gorm.io/gorm"
@@ -47,13 +49,8 @@ func (d *Database) PriceAvgInRange(asset string, windowInDays int) (float64, err
 	if !IsValidAsset(asset) {
 		return 0, ErrInvalidAsset
 	}
-	windowEnd := time.Now()
-	windowStart := windowEnd.AddDate(0, 0, -windowInDays)
-	var prices []*Price
-	if err := d.db.Model(&Price{}).Where(
-		"type = ? AND created_at BETWEEN ? AND ?",
-		asset, windowStart, windowEnd,
-	).Find(&prices).Error; err != nil {
+	prices, err := d.windowRangeQuery(asset, windowInDays)
+	if err != nil {
 		return 0, err
 	}
 	var totalPrice float64
@@ -61,4 +58,41 @@ func (d *Database) PriceAvgInRange(asset string, windowInDays int) (float64, err
 		totalPrice += price.USDPrice
 	}
 	return totalPrice / float64(len(prices)), nil
+}
+
+// PriceChangeInRange returns the price change percentage in the last N days
+func (d *Database) PriceChangeInRange(asset string, windowInDays int) (float64, error) {
+	if !IsValidAsset(asset) {
+		return 0, ErrInvalidAsset
+	}
+	prices, err := d.windowRangeQuery(asset, windowInDays)
+	if err != nil {
+		return 0, err
+	}
+	switch len(prices) {
+	case 0:
+		return 0, errors.New("no prices found")
+	case 1:
+		return 0, nil // no price change
+	default:
+	}
+	startPrice := prices[0].USDPrice
+	finalPrice := prices[len(prices)-1].USDPrice
+	// get the percentage change
+	percentChange := ((finalPrice - startPrice) / math.Abs(startPrice))
+	/*if startPrice < finalPrice {
+		log.Println("last is less than first")
+		percentChange = -percentChange
+	}*/
+	return percentChange, nil
+}
+
+func (d *Database) windowRangeQuery(asset string, windowInDays int) ([]*Price, error) {
+	windowEnd := time.Now()
+	windowStart := windowEnd.AddDate(0, 0, -windowInDays)
+	var prices []*Price
+	return prices, d.db.Model(&Price{}).Where(
+		"type = ? AND created_at BETWEEN ? AND ?",
+		asset, windowStart, windowEnd,
+	).Find(&prices).Error
 }
