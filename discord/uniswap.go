@@ -42,9 +42,6 @@ func (c *Client) uniswapExchangeAmountHandler(ctx *dgc.Ctx) {
 }
 
 func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
-	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
-		return
-	}
 	arguments := ctx.Arguments
 	direction := arguments.Get(0).Raw()
 	// valid the allowed currencies
@@ -85,7 +82,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		}
 		ctx.RespondText(fmt.Sprintf("NDX-DAI exchange rate: %0.2f", price))
 	default:
-		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai")
+		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
 		return
 	}
 }
