@@ -80,10 +80,6 @@ func (d *Database) PriceChangeInRange(asset string, windowInDays int) (float64, 
 	finalPrice := prices[len(prices)-1].USDPrice
 	// get the percentage change
 	percentChange := ((finalPrice - startPrice) / math.Abs(startPrice))
-	/*if startPrice < finalPrice {
-		log.Println("last is less than first")
-		percentChange = -percentChange
-	}*/
 	return percentChange, nil
 }
 
