@@ -189,12 +189,15 @@ func main() {
 							return err
 						}
 						wg := &sync.WaitGroup{}
-						wg.Add(1)
-						// launch database price updater loop
-						go func() {
-							defer wg.Done()
-							dbPriceUpdateLoop(ctx, bc, database)
-						}()
+						if c.Bool("update.database") {
+							wg.Add(1)
+							// launch database price updater loop
+							go func() {
+								defer wg.Done()
+								dbPriceUpdateLoop(ctx, bc, database)
+							}()
+						}
+
 						client, err := discord.NewClient(ctx, cfg, bc, database)
 						if err != nil {
 							return err
@@ -211,6 +214,11 @@ func main() {
 							Name:    "discord.token",
 							Usage:   "the discord api token",
 							EnvVars: []string{"DISCORD_TOKEN"},
+						},
+						&cli.BoolFlag{
+							Name:  "update.database",
+							Usage: "if true launch the db price update routine. if false make sure chain-updater command is running",
+							Value: true,
 						},
 					},
 				},

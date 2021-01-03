@@ -14,4 +14,4 @@ FROM alpine:3.12
 RUN apk add --no-cache tini
 COPY --from=build-env /bin/gondx /bin/gondx
 ENTRYPOINT  ["/bin/gondx", "--config", "/config.yml" ]
-CMD [ "--startup.sleep", "discord", "ndx-bot" ]
+CMD [ "--startup.sleep", "discord", "ndx-bot", "--update.database" ]
