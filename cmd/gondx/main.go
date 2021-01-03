@@ -98,7 +98,15 @@ func main() {
 							return err
 						}
 						defer bc.Close()
-						database, err := db.New(&db.Opts{Type: "sqlite", DBName: "indexed"})
+						database, err := db.New(&db.Opts{
+							Type:           cfg.Database.Type,
+							Host:           cfg.Database.Host,
+							Port:           cfg.Database.Port,
+							User:           cfg.Database.User,
+							Password:       cfg.Database.Pass,
+							DBName:         cfg.Database.DBName,
+							SSLModeDisable: cfg.Database.SSLModeDisable,
+						})
 						if err != nil {
 							return err
 						}

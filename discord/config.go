@@ -16,6 +16,18 @@ type Config struct {
 	InfuraWSEnabled bool      `yaml:"infura_ws_enabled"`
 	ETHRPCEndpoint  string    `yaml:"eth_rpc_endpoint"`
 	Watchers        []Watcher `yaml:"watchers"`
+	Database        Database  `yaml:"database"`
+}
+
+// Database provides configuration over our database connection
+type Database struct {
+	Type           string `yaml:"type"` // sqlite or postgres, if sqlite all other options except DBName are ignored
+	Host           string `yaml:"host"`
+	Port           string `yaml:"port"`
+	User           string `yaml:"user"`
+	Pass           string `yaml:"pass"`
+	DBName         string `yaml:"db_name"`
+	SSLModeDisable bool   `yaml:"ssl_mode_disable"`
 }
 
 // Watcher is used to start a process that watches the price of a token
@@ -34,6 +46,15 @@ var (
 		ETHRPCEndpoint:   "http://localhost:8545",
 		Watchers: []Watcher{
 			{DiscordToken: "CHANGEME-TOKEN", Currency: "CHANGEME-CURRENCY"},
+		},
+		Database: Database{
+			Type:           "sqlite",
+			Host:           "localhost",
+			Port:           "5432",
+			User:           "user",
+			Pass:           "pass",
+			DBName:         "indexed",
+			SSLModeDisable: false,
 		},
 	}
 )
