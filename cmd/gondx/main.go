@@ -163,11 +163,12 @@ func main() {
 						if err != nil {
 							return err
 						}
+						defer database.Close()
 						if err := database.AutoMigrate(); err != nil {
-							database.Close()
+
 							return err
 						}
-						defer database.Close()
+
 						// launch database price updater loop
 						go dbPriceUpdateLoop(ctx, bc, database)
 						client, err := discord.NewClient(ctx, cfg, bc, database)
