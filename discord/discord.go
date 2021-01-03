@@ -199,8 +199,8 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			watcherBot.UpdateStatus(0, "indexed.finance")
 			// this will close whenever the goroutine exits
 			defer watcherBot.Close()
-			// set a ticker for price updates to bare minimum which assumes a 15 second block time
-			ticker := time.NewTicker(time.Second * 15)
+			// set a ticker for price updates to every 30 seconds, roughly every 2 blocks
+			ticker := time.NewTicker(time.Second * 30)
 			defer ticker.Stop()
 			for {
 				select {
