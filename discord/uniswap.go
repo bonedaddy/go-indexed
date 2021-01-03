@@ -44,7 +44,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 	// valid the allowed currencies
 	switch strings.ToLower(direction) {
 	case "defi5-dai":
-		price, err := c.bc.Defi5DaiPrice()
+		price, err := c.db.LastPrice("defi5")
 		if err != nil {
 			ctx.RespondText("failed to get price")
 			log.Println("defi5 dai price fetch failed: ", err)
@@ -53,7 +53,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		ctx.RespondText(fmt.Sprintf("DEFI5-DAI exchange rate: %0.2f", price))
 		return
 	case "cc10-dai":
-		price, err := c.bc.Cc10DaiPrice()
+		price, err := c.db.LastPrice("cc10")
 		if err != nil {
 			ctx.RespondText("failed to get price")
 			log.Println("cc10 dai price fetch failed: ", err)
@@ -62,16 +62,16 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		ctx.RespondText(fmt.Sprintf("CC10-DAI exchange rate: %0.2f", price))
 		return
 	case "eth-dai":
-		price, err := c.bc.EthDaiPrice()
+		price, err := c.db.LastPrice("eth")
 		if err != nil {
 			ctx.RespondText("failed to get price")
 			log.Println("cc10 dai price fetch failed: ", err)
 			return
 		}
-		ctx.RespondText("ETH-DAI exchange rate: " + price.String())
+		ctx.RespondText(fmt.Sprintf("ETH-DAI exchange rate: %0.2f", price))
 		return
 	case "ndx-dai":
-		price, err := c.bc.NdxDaiPrice()
+		price, err := c.db.LastPrice("ndx")
 		if err != nil {
 			ctx.RespondText("failed to get price")
 			log.Println("ndx dai price fetch failed: ", err)

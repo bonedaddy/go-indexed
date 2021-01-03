@@ -10,6 +10,7 @@ import (
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -24,6 +25,7 @@ type Client struct {
 	s  *discordgo.Session
 	bc *bclient.Client
 	r  *dgc.Router
+	db *db.Database
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -31,11 +33,11 @@ type Client struct {
 }
 
 // NewClient provides a wrapper around discordgo
-func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, error) {
+func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Database) (*Client, error) {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(ctx)
 	// launch price watcher bots
-	if err := launchWatchers(ctx, wg, cfg, bc); err != nil {
+	if err := launchWatchers(ctx, wg, cfg, bc, db); err != nil {
 		cancel()
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 		},
 	})
 
-	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg}
+	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg, db: db}
 
 	// register our custom help command
 	registerHelpCommand(dg, nil, router)
@@ -172,6 +174,9 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 func (c *Client) Close() error {
 	c.cancel()
 	c.wg.Wait()
+	if err := c.db.Close(); err != nil {
+		log.Println("failed to close database: ", err)
+	}
 	return c.s.Close()
 }
 
@@ -182,7 +187,58 @@ func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client) error {
+func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {
+	// launch db price watcher
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(time.Second * 30)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				// update defi5 price
+				price, err := bc.Defi5DaiPrice()
+				if err != nil {
+					log.Println("failed to get defi5 dai price: ", price)
+				} else {
+					if err := db.RecordPrice("defi5", price); err != nil {
+						log.Println("failed to update defi5 dai price: ", err)
+					}
+				}
+				// update cc10 price
+				price, err = bc.Cc10DaiPrice()
+				if err != nil {
+					log.Println("failed to get cc10 dai price: ", err)
+				} else {
+					if err := db.RecordPrice("cc10", price); err != nil {
+						log.Println("failed to update cc10 dai price: ", err)
+					}
+				}
+				// update eth price
+				priceBig, err := bc.EthDaiPrice()
+				if err != nil {
+					log.Println("failed to get eth dai price: ", err)
+				} else {
+					if err := db.RecordPrice("eth", float64(priceBig.Int64())); err != nil {
+						log.Println("failed to update eth dai price: ", err)
+					}
+				}
+				// update ndx price
+				price, err = bc.NdxDaiPrice()
+				if err != nil {
+					log.Println("failed to get ndx dai price: ", err)
+				} else {
+					if err := db.RecordPrice("ndx", price); err != nil {
+						log.Println("failed to update ndx dai price: ", err)
+					}
+				}
+			}
+
+		}
+	}()
 	for _, watcher := range cfg.Watchers {
 		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
 		if err != nil {
@@ -215,21 +271,21 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 				)
 				switch strings.ToLower(name) {
 				case "defi5":
-					price, err = bc.Defi5DaiPrice()
+					price, err = db.LastPrice("defi5")
 					if err != nil {
 						log.Println("failed to get defi5 dai price error: ", err)
 						continue
 					}
 				case "cc10":
-					price, err = bc.Cc10DaiPrice()
+					price, err = db.LastPrice("cc10")
 					if err != nil {
-						log.Println("failed to get defi5 dai price error: ", err)
+						log.Println("failed to get cc10 dai price error: ", err)
 						continue
 					}
 				case "ndx":
-					price, err = bc.NdxDaiPrice()
+					price, err = db.LastPrice("ndx")
 					if err != nil {
-						log.Println("failed to get defi5 dai price error: ", err)
+						log.Println("failed to get cc10 dai price error: ", err)
 						continue
 					}
 				}
