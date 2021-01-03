@@ -51,8 +51,21 @@ func main() {
 			Usage:   "path to discord bot configuration file",
 			Value:   "config.yml",
 		},
+		&cli.BoolFlag{
+			Name:  "startup.sleep",
+			Usage: "whether or not to sleep on startup, useful for giving containers time to initialize",
+			Value: false,
+		},
+		&cli.DurationFlag{
+			Name:  "startup.sleep_time",
+			Usage: "time.Duration type specifying sleep duration",
+			Value: time.Second * 5,
+		},
 	}
 	app.Before = func(c *cli.Context) error {
+		if c.Bool("startup.sleep") {
+			time.Sleep(c.Duration("startup.sleep_time"))
+		}
 		if c.String("config") != "" {
 			return nil
 		}

@@ -13,5 +13,5 @@ RUN go build -o /bin/gondx \
 FROM alpine:3.12
 RUN apk add --no-cache tini
 COPY --from=build-env /bin/gondx /bin/gondx
-COPY entrypoint.sh /bin/entrypoint.sh
-ENTRYPOINT ["/sbin/tini", "--", "/bin/entrypoint.sh"]
+ENTRYPOINT  ["/bin/gondx", "--config", "/config.yml" ]
+CMD [ "--startup.sleep", "discord", "ndx-bot" ]
