@@ -73,6 +73,59 @@ func main() {
 			Usage: "discord bot management",
 			Subcommands: cli.Commands{
 				&cli.Command{
+					Name:    "database",
+					Aliases: []string{"db"},
+					Usage:   "database management commands",
+					Subcommands: cli.Commands{
+						&cli.Command{
+							Name:        "chain-updater",
+							Usage:       "starts the database chain state updater",
+							Description: "chain-updater is responsible for persisting all information needed into a database such as price updates",
+							Action: func(c *cli.Context) error {
+								ctx, cancel := context.WithCancel(c.Context)
+								defer cancel()
+								cfg, err := discord.LoadConfig(c.String("config"))
+								if err != nil {
+									return err
+								}
+								if cfg.InfuraAPIKey != "" {
+									bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
+								} else {
+									bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
+								}
+								if err != nil {
+									return err
+								}
+								defer bc.Close()
+								database, err := db.New(&db.Opts{
+									Type:           cfg.Database.Type,
+									Host:           cfg.Database.Host,
+									Port:           cfg.Database.Port,
+									User:           cfg.Database.User,
+									Password:       cfg.Database.Pass,
+									DBName:         cfg.Database.DBName,
+									SSLModeDisable: cfg.Database.SSLModeDisable,
+								})
+								if err != nil {
+									return err
+								}
+								if err := database.AutoMigrate(); err != nil {
+									database.Close()
+									return err
+								}
+								defer database.Close()
+								// launch database price updater loop
+								dbPriceUpdateLoop(ctx, bc, database)
+								sc := make(chan os.Signal, 1)
+								signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+								<-sc
+								cancel()
+								return nil
+							},
+						},
+					},
+				},
+				&cli.Command{
 					Name:  "gen-config",
 					Usage: "generate ndx bot config file",
 					Action: func(c *cli.Context) error {
@@ -124,6 +177,7 @@ func main() {
 						sc := make(chan os.Signal, 1)
 						signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 						<-sc
+						cancel()
 						return client.Close()
 					},
 					Flags: []cli.Flag{
