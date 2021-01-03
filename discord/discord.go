@@ -174,9 +174,6 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 func (c *Client) Close() error {
 	c.cancel()
 	c.wg.Wait()
-	if err := c.db.Close(); err != nil {
-		log.Println("failed to close database: ", err)
-	}
 	return c.s.Close()
 }
 
@@ -188,57 +185,6 @@ func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {
-	// launch db price watcher
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ticker := time.NewTicker(time.Second * 30)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				// update defi5 price
-				price, err := bc.Defi5DaiPrice()
-				if err != nil {
-					log.Println("failed to get defi5 dai price: ", price)
-				} else {
-					if err := db.RecordPrice("defi5", price); err != nil {
-						log.Println("failed to update defi5 dai price: ", err)
-					}
-				}
-				// update cc10 price
-				price, err = bc.Cc10DaiPrice()
-				if err != nil {
-					log.Println("failed to get cc10 dai price: ", err)
-				} else {
-					if err := db.RecordPrice("cc10", price); err != nil {
-						log.Println("failed to update cc10 dai price: ", err)
-					}
-				}
-				// update eth price
-				priceBig, err := bc.EthDaiPrice()
-				if err != nil {
-					log.Println("failed to get eth dai price: ", err)
-				} else {
-					if err := db.RecordPrice("eth", float64(priceBig.Int64())); err != nil {
-						log.Println("failed to update eth dai price: ", err)
-					}
-				}
-				// update ndx price
-				price, err = bc.NdxDaiPrice()
-				if err != nil {
-					log.Println("failed to get ndx dai price: ", err)
-				} else {
-					if err := db.RecordPrice("ndx", price); err != nil {
-						log.Println("failed to update ndx dai price: ", err)
-					}
-				}
-			}
-
-		}
-	}()
 	for _, watcher := range cfg.Watchers {
 		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
 		if err != nil {
@@ -256,6 +202,7 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			// this will close whenever the goroutine exits
 			defer watcherBot.Close()
 			// set a ticker for price updates to bare minimum which assumes a 15 second block time
+			// ultimately this will depend on how often the database is updated
 			ticker := time.NewTicker(time.Second * 15)
 			defer ticker.Stop()
 			for {

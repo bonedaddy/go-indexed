@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bonedaddy/go-indexed/db"
@@ -82,6 +83,8 @@ func main() {
 					Name:  "ndx-bot",
 					Usage: "starts NDXBot",
 					Action: func(c *cli.Context) error {
+						ctx, cancel := context.WithCancel(c.Context)
+						defer cancel()
 						cfg, err := discord.LoadConfig(c.String("config"))
 						if err != nil {
 							return err
@@ -103,7 +106,10 @@ func main() {
 							database.Close()
 							return err
 						}
-						client, err := discord.NewClient(context.Background(), cfg, bc, database)
+						defer database.Close()
+						// launch database price updater loop
+						go dbPriceUpdateLoop(ctx, bc, database)
+						client, err := discord.NewClient(ctx, cfg, bc, database)
 						if err != nil {
 							return err
 						}
@@ -169,5 +175,54 @@ func main() {
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database) {
+	ticker := time.NewTicker(time.Second * 30)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// update defi5 price
+			price, err := bc.Defi5DaiPrice()
+			if err != nil {
+				log.Println("failed to get defi5 dai price: ", price)
+			} else {
+				if err := db.RecordPrice("defi5", price); err != nil {
+					log.Println("failed to update defi5 dai price: ", err)
+				}
+			}
+			// update cc10 price
+			price, err = bc.Cc10DaiPrice()
+			if err != nil {
+				log.Println("failed to get cc10 dai price: ", err)
+			} else {
+				if err := db.RecordPrice("cc10", price); err != nil {
+					log.Println("failed to update cc10 dai price: ", err)
+				}
+			}
+			// update eth price
+			priceBig, err := bc.EthDaiPrice()
+			if err != nil {
+				log.Println("failed to get eth dai price: ", err)
+			} else {
+				if err := db.RecordPrice("eth", float64(priceBig.Int64())); err != nil {
+					log.Println("failed to update eth dai price: ", err)
+				}
+			}
+			// update ndx price
+			price, err = bc.NdxDaiPrice()
+			if err != nil {
+				log.Println("failed to get ndx dai price: ", err)
+			} else {
+				if err := db.RecordPrice("ndx", price); err != nil {
+					log.Println("failed to update ndx dai price: ", err)
+				}
+			}
+		}
+
 	}
 }
