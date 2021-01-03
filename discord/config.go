@@ -27,6 +27,7 @@ type Database struct {
 	User           string `yaml:"user"`
 	Pass           string `yaml:"pass"`
 	DBName         string `yaml:"db_name"`
+	DBPath         string `yaml:"db_path"`
 	SSLModeDisable bool   `yaml:"ssl_mode_disable"`
 }
 
@@ -54,6 +55,7 @@ var (
 			User:           "user",
 			Pass:           "pass",
 			DBName:         "indexed",
+			DBPath:         "/changeme",
 			SSLModeDisable: false,
 		},
 	}

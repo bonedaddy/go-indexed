@@ -22,6 +22,7 @@ type Opts struct {
 	User           string
 	Password       string
 	DBName         string
+	DBPath         string
 	SSLModeDisable bool
 }
 
@@ -43,7 +44,7 @@ func (db *Opts) Open() (gorm.Dialector, error) {
 	case "postgres":
 		return postgres.Open(db.DSN()), nil
 	case "sqlite":
-		return sqlite.Open(db.DBName + ".db"), nil
+		return sqlite.Open(db.DBPath + db.DBName + ".db"), nil
 	default:
 		return nil, errors.New("unsupported db type")
 	}

@@ -123,7 +123,7 @@ func main() {
 								}()
 
 								sc := make(chan os.Signal, 1)
-								signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+								signal.Notify(sc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
 								<-sc
 								cancel()
 								wg.Wait()
@@ -187,7 +187,7 @@ func main() {
 							return err
 						}
 						sc := make(chan os.Signal, 1)
-						signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+						signal.Notify(sc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
 						<-sc
 						cancel()
 						wg.Wait()
