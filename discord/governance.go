@@ -7,6 +7,7 @@ import (
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -101,11 +102,11 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "ForVotes",
-				Value: proposal.ForVotes.String(),
+				Value: utils.ToDecimal(proposal.ForVotes, 18).String(),
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "AgainstVotes",
-				Value: proposal.AgainstVotes.String(),
+				Value: utils.ToDecimal(proposal.AgainstVotes, 18).String(),
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "Canceled",
