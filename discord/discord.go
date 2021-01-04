@@ -230,14 +230,11 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 
 // used to launch watcher bots that monitor two prices and rotate between each
 func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
-	// set a ticker for price updates to every 30 seconds, roughly every 2 blocks
-	ticker := time.NewTicker(time.Second * 30)
-	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-ticker.C:
+		default:
 		}
 		var (
 			price float64
@@ -257,6 +254,7 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 			price, err = database.LastPrice("cc10")
 			if err != nil {
 				log.Println("failed to get cc10 dai price: ", err)
+				continue
 			}
 			cc10DaiPrice = price
 
@@ -268,11 +266,11 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 			for _, guild := range guilds {
 				bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("DEFI5: $%0.2f", defi5DaiPrice))
 			}
-			time.Sleep(time.Second * 15) // wait 15 seconds before displaying new price
+			time.Sleep(time.Second * 10) // wait 10 seconds before displaying new price
 			for _, guild := range guilds {
 				bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("CC10: $%0.2f", cc10DaiPrice))
 			}
-			continue
+			time.Sleep(time.Second * 10) // wait 10 seconds before looping again
 		default:
 			return errors.New("unsupported name: " + name)
 		}
@@ -281,8 +279,7 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 
 // used to launch watcher bots that monitor one price
 func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
-	// set a ticker for price updates to every 30 seconds, roughly every 2 blocks
-	ticker := time.NewTicker(time.Second * 30)
+	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 	for {
 		select {
