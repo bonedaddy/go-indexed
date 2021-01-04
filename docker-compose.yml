@@ -2,19 +2,30 @@ version: "3.5"
 services:
   ndx-bot:
     image: bonedaddy/gondx:latest
+    command: "--startup.sleep discord ndx-bot"
     depends_on:
+      - chain-updater
       - postgres
     networks:
       privnet:
         ipv4_address: 172.16.238.2
     volumes: 
       - ./config.yml:/config.yml
-      - ./indexed.db:/indexed.db
+  chain-updater:
+    image: bonedaddy/gondx:latest
+    command: "--startup.sleep discord db chain-updater"
+    depends_on:
+      - postgres
+    networks:
+      privnet:
+        ipv4_address: 172.16.238.3
+    volumes: 
+      - ./config.yml:/config.yml
   postgres:
     image: postgres:10.12
     networks:
       privnet:
-        ipv4_address: 172.16.238.3
+        ipv4_address: 172.16.238.4
     environment:
       POSTGRES_DB: "indexed"
       POSTGRES_USER: "postgres"
