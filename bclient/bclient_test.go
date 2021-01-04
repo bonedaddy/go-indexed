@@ -214,3 +214,9 @@ func TestUniswap(t *testing.T) {
 
 	})
 }
+
+func TestGovernance(t *testing.T) {
+	client := doSetup(t)
+	_, err := client.GovernorAlpha()
+	require.NoError(t, err)
+}
