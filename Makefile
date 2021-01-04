@@ -46,3 +46,11 @@ docker-build:
 .PHONY: release
 release:
 	.scripts/release.sh
+
+.PHONY: testenv
+testenv:
+	docker-compose up -d
+
+.PHONY: testenv-clean
+testenv-clean:
+	docker-compose up -d --force-recreate
