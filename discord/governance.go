@@ -29,14 +29,17 @@ func (c *Client) governanceCurrentProposalsHandler(ctx *dgc.Ctx) {
 }
 
 func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
-	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
-		return
-	}
 	arguments := ctx.Arguments
 	number, err := arguments.Get(0).AsInt64()
 	if err != nil {
-		log.Println("invalid argument given must be a number: ", err)
 		ctx.RespondText("invalid argument given must be a number")
+		return
+	}
+	if number == 0 {
+		ctx.RespondText("number must be 1 or higher")
+		return
+	}
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
 		return
 	}
 	gov, err := c.bc.GovernorAlpha()
