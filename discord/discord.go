@@ -210,7 +210,7 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			go func(name string) {
 				defer watcherBot.Close() // register first so it happens before wait gorup closure
 				defer wg.Done()
-				if err := launchComboWatcherBot(ctx, watcherBot, bc, name); err != nil {
+				if err := launchComboWatcherBot(ctx, watcherBot, bc, db, name); err != nil {
 					log.Printf("an error occured for %s price watcher: %s", name, err)
 				}
 			}(watcher.Currency)
@@ -219,7 +219,7 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			go func(name string) {
 				defer watcherBot.Close() // register first so it happens before wait gorup closure
 				defer wg.Done()
-				if err := launchSingleWatcherBot(ctx, watcherBot, bc, name); err != nil {
+				if err := launchSingleWatcherBot(ctx, watcherBot, bc, db, name); err != nil {
 					log.Printf("an error occured for %s price watcher: %s", name, err)
 				}
 			}(watcher.Currency)
@@ -229,7 +229,7 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 }
 
 // used to launch watcher bots that monitor two prices and rotate between each
-func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, name string) error {
+func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
 	// set a ticker for price updates to every 30 seconds, roughly every 2 blocks
 	ticker := time.NewTicker(time.Second * 30)
 	defer ticker.Stop()
@@ -247,14 +247,14 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 		case "cc10-defi5", "defi5-cc10": // handle combo cc10 and defi5 price tracker
 			var defi5DaiPrice, cc10DaiPrice float64
 
-			price, err = bc.Defi5DaiPrice()
+			price, err = database.LastPrice("defi5")
 			if err != nil {
 				log.Println("failed to get defi5 dai price: ", err)
 				continue
 			}
 			defi5DaiPrice = price
 
-			price, err = bc.Cc10DaiPrice()
+			price, err = database.LastPrice("cc10")
 			if err != nil {
 				log.Println("failed to get cc10 dai price: ", err)
 			}
@@ -280,7 +280,7 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 }
 
 // used to launch watcher bots that monitor one price
-func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, name string) error {
+func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
 	// set a ticker for price updates to every 30 seconds, roughly every 2 blocks
 	ticker := time.NewTicker(time.Second * 30)
 	defer ticker.Stop()
@@ -296,19 +296,19 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 		)
 		switch strings.ToLower(name) {
 		case "defi5":
-			price, err = bc.Defi5DaiPrice()
+			price, err = database.LastPrice("defi5")
 			if err != nil {
 				log.Println("failed to get defi5 dai price error: ", err)
 				continue
 			}
 		case "cc10":
-			price, err = bc.Cc10DaiPrice()
+			price, err = database.LastPrice("cc10")
 			if err != nil {
 				log.Println("failed to get defi5 dai price error: ", err)
 				continue
 			}
 		case "ndx":
-			price, err = bc.NdxDaiPrice()
+			price, err = database.LastPrice("ndx")
 			if err != nil {
 				log.Println("failed to get defi5 dai price error: ", err)
 				continue
