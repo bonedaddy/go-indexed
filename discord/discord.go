@@ -187,6 +187,8 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 			&dgc.Command{
 				Name:        "proposal-count",
 				Description: "returns the current number of proposals that have been submitted",
+				Usage:       " governance proposal-count",
+				Example:     " governance proposal-count",
 				Handler:     client.governanceCurrentProposalsHandler,
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
 					ctx.RespondText(rateLimitMsg)
@@ -194,7 +196,8 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 			},
 			&dgc.Command{
 				Name:        "proposal-info",
-				Usage:       " proposal-info <number>",
+				Usage:       " governance proposal-info <number>",
+				Example:     " governance proposal-info 1 (returns information on the first proposal ever submitted)",
 				Description: "returns information about the given proposal where <number> represents the proposal submission number. the first proposal submitted would have a submission number of 1, the second proposal submitted would have a submission number of 2, etc...",
 				Handler:     client.governanceProposalInfoHandler,
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
