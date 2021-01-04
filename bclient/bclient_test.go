@@ -223,5 +223,8 @@ func TestGovernance(t *testing.T) {
 	count, err := gov.ProposalCount(nil)
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, count.Int64(), int64(1))
-	t.Log("proposal count: ", count)
+
+	state, err := GetProposalState(gov, big.NewInt(1))
+	require.NoError(t, err)
+	require.Equal(t, Executed.String(), state.String())
 }

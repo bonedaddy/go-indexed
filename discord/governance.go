@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/bonedaddy/dgc"
+	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -65,6 +66,12 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 		Canceled     bool
 		Executed     bool
 	*/
+	proposalState, err := bclient.GetProposalState(gov, big.NewInt(number))
+	if err != nil {
+		log.Println("failed to get proposal state: ", err)
+		ctx.RespondText("failed to get proposal state")
+		return
+	}
 	ctx.RespondEmbed(&discordgo.MessageEmbed{
 		Title: "Proposal Overview",
 		Fields: []*discordgo.MessageEmbedField{
@@ -75,6 +82,10 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 			&discordgo.MessageEmbedField{
 				Name:  "Proposer",
 				Value: proposal.Proposer.String(),
+			},
+			&discordgo.MessageEmbedField{
+				Name:  "State",
+				Value: proposalState.String(),
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "ETA",
