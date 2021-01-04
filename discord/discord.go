@@ -16,10 +16,7 @@ import (
 )
 
 var (
-	helpEmbed        *discordgo.MessageEmbed
-	notifyHelpEmbed  *discordgo.MessageEmbed
-	uniswapHelpEmbed *discordgo.MessageEmbed
-	rateLimitMsg     = "You are being rate limited. Users are allowed 1 blockchain query per command every 60 seconds"
+	rateLimitMsg = "You are being rate limited. Users are allowed 1 blockchain query per command every 60 seconds"
 )
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
@@ -193,13 +190,6 @@ func (c *Client) Close() error {
 	c.cancel()
 	c.wg.Wait()
 	return c.s.Close()
-}
-
-func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if _, err := s.ChannelMessageSendEmbed(m.ChannelID, helpEmbed); err != nil {
-		fmt.Println("error sending message: ", err.Error())
-		return
-	}
 }
 
 func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {
