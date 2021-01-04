@@ -11,13 +11,12 @@ import (
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bwmarrin/discordgo"
 )
 
 var (
-	helpEmbed        *discordgo.MessageEmbed
-	notifyHelpEmbed  *discordgo.MessageEmbed
-	uniswapHelpEmbed *discordgo.MessageEmbed
+	rateLimitMsg = "You are being rate limited. Users are allowed 1 blockchain query per command every 60 seconds"
 )
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
@@ -25,6 +24,7 @@ type Client struct {
 	s  *discordgo.Session
 	bc *bclient.Client
 	r  *dgc.Router
+	db *db.Database
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -32,11 +32,11 @@ type Client struct {
 }
 
 // NewClient provides a wrapper around discordgo
-func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, error) {
+func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Database) (*Client, error) {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(ctx)
 	// launch price watcher bots
-	if err := launchWatchers(ctx, wg, cfg, bc); err != nil {
+	if err := launchWatchers(ctx, wg, cfg, bc, db); err != nil {
 		cancel()
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 		},
 	})
 
-	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg}
+	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg, db: db}
 
 	// register our custom help command
 	registerHelpCommand(dg, nil, router)
@@ -113,7 +113,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.poolTokensHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+					ctx.RespondText(rateLimitMsg)
 				}),
 			},
 			&dgc.Command{
@@ -125,7 +125,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.poolBalanceHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+					ctx.RespondText(rateLimitMsg)
 				}),
 			},
 		},
@@ -145,7 +145,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 		Handler:     client.stakeEarnedHandler,
 		// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 		RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-			ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+			ctx.RespondText(rateLimitMsg)
 		}),
 	})
 
@@ -163,7 +163,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Handler:     client.uniswapExchangeAmountHandler,
 				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
+					ctx.RespondText(rateLimitMsg)
 				}),
 			},
 			&dgc.Command{
@@ -172,10 +172,6 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client) (*Client, e
 				Usage:       " uniswap exchange-rate <direction>",
 				Example:     " uniswap exchange-rate defi5-dai (returns the value of defi5 in terms of dai)",
 				Handler:     client.uniswapExchangeRateHandler,
-				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
-				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
-					ctx.RespondText("You are being rate limited. Users allowed 1 request per command every 60 seconds.")
-				}),
 			},
 		},
 		Handler: func(ctx *dgc.Ctx) {
@@ -196,14 +192,7 @@ func (c *Client) Close() error {
 	return c.s.Close()
 }
 
-func (c *Client) sendHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if _, err := s.ChannelMessageSendEmbed(m.ChannelID, helpEmbed); err != nil {
-		fmt.Println("error sending message: ", err.Error())
-		return
-	}
-}
-
-func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client) error {
+func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {
 	for _, watcher := range cfg.Watchers {
 		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
 		if err != nil {

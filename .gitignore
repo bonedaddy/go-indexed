@@ -6,3 +6,5 @@ config.yml
 files
 
 release/
+
+*.db

@@ -4,6 +4,13 @@ indexed-uv2oracle
 uniswap-v2-core
 abi
 .git
+.gitmodules
+README.md
+LICENSE
+Makefile
 release
+files
 config.yml
 ./gondx
+./indexed.db
+.scripts

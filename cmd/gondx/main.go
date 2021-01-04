@@ -8,9 +8,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bonedaddy/go-indexed/discord"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
@@ -48,8 +51,21 @@ func main() {
 			Usage:   "path to discord bot configuration file",
 			Value:   "config.yml",
 		},
+		&cli.BoolFlag{
+			Name:  "startup.sleep",
+			Usage: "whether or not to sleep on startup, useful for giving containers time to initialize",
+			Value: false,
+		},
+		&cli.DurationFlag{
+			Name:  "startup.sleep_time",
+			Usage: "time.Duration type specifying sleep duration",
+			Value: time.Second * 5,
+		},
 	}
 	app.Before = func(c *cli.Context) error {
+		if c.Bool("startup.sleep") {
+			time.Sleep(c.Duration("startup.sleep_time"))
+		}
 		if c.String("config") != "" {
 			return nil
 		}
@@ -71,6 +87,65 @@ func main() {
 			Usage: "discord bot management",
 			Subcommands: cli.Commands{
 				&cli.Command{
+					Name:    "database",
+					Aliases: []string{"db"},
+					Usage:   "database management commands",
+					Subcommands: cli.Commands{
+						&cli.Command{
+							Name:        "chain-updater",
+							Usage:       "starts the database chain state updater",
+							Description: "chain-updater is responsible for persisting all information needed into a database such as price updates",
+							Action: func(c *cli.Context) error {
+								ctx, cancel := context.WithCancel(c.Context)
+								defer cancel()
+								cfg, err := discord.LoadConfig(c.String("config"))
+								if err != nil {
+									return err
+								}
+								if cfg.InfuraAPIKey != "" {
+									bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
+								} else {
+									bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
+								}
+								if err != nil {
+									return err
+								}
+								defer bc.Close()
+								database, err := db.New(&db.Opts{
+									Type:           cfg.Database.Type,
+									Host:           cfg.Database.Host,
+									Port:           cfg.Database.Port,
+									User:           cfg.Database.User,
+									Password:       cfg.Database.Pass,
+									DBName:         cfg.Database.DBName,
+									SSLModeDisable: cfg.Database.SSLModeDisable,
+								})
+								if err != nil {
+									return err
+								}
+								defer database.Close()
+								if err := database.AutoMigrate(); err != nil {
+									return err
+								}
+								wg := &sync.WaitGroup{}
+								wg.Add(1)
+								// launch database price updater loop
+								go func() {
+									defer wg.Done()
+									dbPriceUpdateLoop(ctx, bc, database)
+								}()
+
+								sc := make(chan os.Signal, 1)
+								signal.Notify(sc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
+								<-sc
+								cancel()
+								wg.Wait()
+								return nil
+							},
+						},
+					},
+				},
+				&cli.Command{
 					Name:  "gen-config",
 					Usage: "generate ndx bot config file",
 					Action: func(c *cli.Context) error {
@@ -81,6 +156,8 @@ func main() {
 					Name:  "ndx-bot",
 					Usage: "starts NDXBot",
 					Action: func(c *cli.Context) error {
+						ctx, cancel := context.WithCancel(c.Context)
+						defer cancel()
 						cfg, err := discord.LoadConfig(c.String("config"))
 						if err != nil {
 							return err
@@ -94,13 +171,42 @@ func main() {
 							return err
 						}
 						defer bc.Close()
-						client, err := discord.NewClient(context.Background(), cfg, bc)
+						database, err := db.New(&db.Opts{
+							Type:           cfg.Database.Type,
+							Host:           cfg.Database.Host,
+							Port:           cfg.Database.Port,
+							User:           cfg.Database.User,
+							Password:       cfg.Database.Pass,
+							DBName:         cfg.Database.DBName,
+							SSLModeDisable: cfg.Database.SSLModeDisable,
+						})
+						if err != nil {
+							return err
+						}
+						defer database.Close()
+						if err := database.AutoMigrate(); err != nil {
+
+							return err
+						}
+						wg := &sync.WaitGroup{}
+						if c.Bool("update.database") {
+							wg.Add(1)
+							// launch database price updater loop
+							go func() {
+								defer wg.Done()
+								dbPriceUpdateLoop(ctx, bc, database)
+							}()
+						}
+
+						client, err := discord.NewClient(ctx, cfg, bc, database)
 						if err != nil {
 							return err
 						}
 						sc := make(chan os.Signal, 1)
-						signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+						signal.Notify(sc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
 						<-sc
+						cancel()
+						wg.Wait()
 						return client.Close()
 					},
 					Flags: []cli.Flag{
@@ -108,6 +214,11 @@ func main() {
 							Name:    "discord.token",
 							Usage:   "the discord api token",
 							EnvVars: []string{"DISCORD_TOKEN"},
+						},
+						&cli.BoolFlag{
+							Name:  "update.database",
+							Usage: "if true launch the db price update routine. if false make sure chain-updater command is running",
+							Value: true,
 						},
 					},
 				},
@@ -160,5 +271,54 @@ func main() {
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database) {
+	ticker := time.NewTicker(time.Second * 30)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// update defi5 price
+			price, err := bc.Defi5DaiPrice()
+			if err != nil {
+				log.Println("failed to get defi5 dai price: ", price)
+			} else {
+				if err := db.RecordPrice("defi5", price); err != nil {
+					log.Println("failed to update defi5 dai price: ", err)
+				}
+			}
+			// update cc10 price
+			price, err = bc.Cc10DaiPrice()
+			if err != nil {
+				log.Println("failed to get cc10 dai price: ", err)
+			} else {
+				if err := db.RecordPrice("cc10", price); err != nil {
+					log.Println("failed to update cc10 dai price: ", err)
+				}
+			}
+			// update eth price
+			priceBig, err := bc.EthDaiPrice()
+			if err != nil {
+				log.Println("failed to get eth dai price: ", err)
+			} else {
+				if err := db.RecordPrice("eth", float64(priceBig.Int64())); err != nil {
+					log.Println("failed to update eth dai price: ", err)
+				}
+			}
+			// update ndx price
+			price, err = bc.NdxDaiPrice()
+			if err != nil {
+				log.Println("failed to get ndx dai price: ", err)
+			} else {
+				if err := db.RecordPrice("ndx", price); err != nil {
+					log.Println("failed to update ndx dai price: ", err)
+				}
+			}
+		}
+
 	}
 }
