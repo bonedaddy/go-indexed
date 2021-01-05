@@ -178,7 +178,37 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 			ctx.RespondText("invalid invocation please run a specific subcommand")
 		},
 	})
-
+	router.RegisterCmd(&dgc.Command{
+		Name:        "governance",
+		Description: "command group for examining the governance contracts",
+		Usage:       " governance <subcommand> <args...>",
+		Example:     " governance proposal-count\n!ndx governance proposal-info 1",
+		SubCommands: []*dgc.Command{
+			&dgc.Command{
+				Name:        "proposal-count",
+				Description: "returns the current number of proposals that have been submitted",
+				Usage:       " governance proposal-count",
+				Example:     " governance proposal-count",
+				Handler:     client.governanceCurrentProposalsHandler,
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText(rateLimitMsg)
+				}),
+			},
+			&dgc.Command{
+				Name:        "proposal-info",
+				Usage:       " governance proposal-info <number>",
+				Example:     " governance proposal-info 1 (returns information on the first proposal ever submitted)",
+				Description: "returns information about the given proposal where <number> represents the proposal submission number. the first proposal submitted would have a submission number of 1, the second proposal submitted would have a submission number of 2, etc...",
+				Handler:     client.governanceProposalInfoHandler,
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText(rateLimitMsg)
+				}),
+			},
+		},
+		Handler: func(ctx *dgc.Ctx) {
+			ctx.RespondText("invalid invocation please run a specific subcommand")
+		},
+	})
 	router.Initialize(dg)
 
 	log.Println("bot is now running")

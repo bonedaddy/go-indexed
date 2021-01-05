@@ -214,3 +214,17 @@ func TestUniswap(t *testing.T) {
 
 	})
 }
+
+func TestGovernance(t *testing.T) {
+	client := doSetup(t)
+	gov, err := client.GovernorAlpha()
+	require.NoError(t, err)
+
+	count, err := gov.ProposalCount(nil)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, count.Int64(), int64(1))
+
+	state, err := GetProposalState(gov, big.NewInt(1))
+	require.NoError(t, err)
+	require.Equal(t, Executed.String(), state.String())
+}

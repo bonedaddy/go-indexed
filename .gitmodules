@@ -10,3 +10,6 @@
 [submodule "uniswap-v2-core"]
 	path = uniswap-v2-core
 	url = https://github.com/Uniswap/uniswap-v2-core.git
+[submodule "indexed-governance"]
+	path = indexed-governance
+	url = https://github.com/indexed-finance/governance.git

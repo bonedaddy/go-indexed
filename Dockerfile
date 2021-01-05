@@ -1,6 +1,6 @@
 FROM golang:1.15-alpine3.12 AS build-env
 ARG VERSION
-RUN apk add --no-cache build-base linux-headers
+RUN apk add build-base linux-headers
 ENV BUILD_HOME=/BUILD
 RUN mkdir -p ${BUILD_HOME}
 ADD . ${BUILD_HOME}

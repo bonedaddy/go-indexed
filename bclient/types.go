@@ -24,6 +24,8 @@ var (
 	DAITokenAddress = common.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
 	// NDXTokenAddress is the address of the NDX contract
 	NDXTokenAddress = common.HexToAddress("0x86772b1409b61c639eaac9ba0acfbb6e238e5f83")
+	// GovernorAlpha is the address of the GovernorALpha governance contract
+	GovernorAlpha = common.HexToAddress("0x95129751769f99CC39824a0793eF4933DD8Bb74B")
 	// InfuraWSURL is the URL for INFURA websockets access
 	InfuraWSURL = "wss://mainnet.infura.io/ws/v3/"
 	// InfuraHTTPURL is the URL for INFURA HTTP access

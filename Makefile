@@ -13,6 +13,7 @@ copy-abi:
 	cp -r ./indexed-js/src/abi/*.json abi
 	cp indexed-core/abi/MarketCapSqrtController.json abi
 	#cp uniswap-v2-core/abi/IUniswap*.json abi
+	cp indexed-governance/abi/GovernorAlpha.json abi
 
 .PHONY: gen-bindings
 gen-bindings:
@@ -24,6 +25,7 @@ gen-bindings:
 	if [ ! -d bindings/marketcap_sqrt_controller ]; then mkdir bindings/marketcap_sqrt_controller ; fi
 	if [ ! -d bindings/erc20 ]; then mkdir bindings/erc20 ; fi
 	if [ ! -d bindings/uniswapv2 ]; then mkdir bindings/uniswapv2 ; fi
+	if [ ! -d bindings/governor_alpha ]; then mkdir bindings/governor_alpha ; fi
 	abigen --abi abi/IPool.json --pkg poolbindings --out bindings/pool/bindings.go
 	abigen --abi abi/Pair.json --pkg pairbindings --out bindings/pair/bindings.go
 	abigen --abi abi/StakingRewards.json --pkg stakingbindings --out bindings/staking_rewards/bindings.go
@@ -34,6 +36,7 @@ gen-bindings:
 	abigen --abi abi/IUniswapV2ERC20.json --pkg uniswapv2erc20 --out bindings/uniswapv2/erc20/v2erc20.go
 	abigen --abi abi/IUniswapV2Factory.json --pkg uniswapv2factory --out bindings/uniswapv2/factory/v2factory.go
 	abigen --abi abi/IUniswapV2Callee.json --pkg uniswapv2callee --out bindings/uniswapv2/callee/v2callee.go
+	abigen --abi abi/GovernorAlpha.json --pkg governoralpha --out bindings/governor_alpha/bindings.go
 
 .PHONY: docker-build
 docker-build:
@@ -43,3 +46,11 @@ docker-build:
 .PHONY: release
 release:
 	.scripts/release.sh
+
+.PHONY: testenv
+testenv:
+	docker-compose up -d
+
+.PHONY: testenv-clean
+testenv-clean:
+	docker-compose up -d --force-recreate

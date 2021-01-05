@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bonedaddy/go-indexed/bindings/erc20"
+	governoralpha "github.com/bonedaddy/go-indexed/bindings/governor_alpha"
 	mcapscontroller "github.com/bonedaddy/go-indexed/bindings/marketcap_sqrt_controller"
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
@@ -126,6 +127,11 @@ func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) 
 
 // Uniswap returns a uniswap client helper
 func (c *Client) Uniswap() *uniswap.Client { return c.uc }
+
+// GovernorAlpha returns the GovernorAlpha contracts binding at the active governance address
+func (c *Client) GovernorAlpha() (*governoralpha.Governoralpha, error) {
+	return governoralpha.NewGovernoralpha(GovernorAlpha, c.ec)
+}
 
 // Close terminates the blockchain connection
 func (c *Client) Close() {
