@@ -73,6 +73,8 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 		ctx.RespondText("failed to get proposal state")
 		return
 	}
+	forVotes, _ := utils.ToDecimal(proposal.ForVotes, 18).Float64()
+	againstVotes, _ := utils.ToDecimal(proposal.AgainstVotes, 18).Float64()
 	ctx.RespondEmbed(&discordgo.MessageEmbed{
 		Title: "Proposal Overview",
 		Fields: []*discordgo.MessageEmbedField{
@@ -102,11 +104,11 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "ForVotes",
-				Value: utils.ToDecimal(proposal.ForVotes, 18).String(),
+				Value: fmt.Sprintf("%0.2f", forVotes),
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "AgainstVotes",
-				Value: utils.ToDecimal(proposal.AgainstVotes, 18).String(),
+				Value: fmt.Sprintf("%0.2f", againstVotes),
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "Canceled",
