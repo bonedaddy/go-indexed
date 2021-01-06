@@ -55,6 +55,9 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 		log.Println("failed to udpate streaming status: ", err)
 	}
 
+	// updates the main bot's nickname to reflect ndx price
+	ndxPriceWatchRoutine(ctx, dg, wg, db)
+
 	// declare the base router
 	router := dgc.Create(&dgc.Router{
 		Prefixes:         []string{"!ndx"},
@@ -220,6 +223,35 @@ func (c *Client) Close() error {
 	c.cancel()
 	c.wg.Wait()
 	return c.s.Close()
+}
+
+func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.WaitGroup, db *db.Database) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(time.Second * 10)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				price, err := db.LastPrice("ndx")
+				if err != nil {
+					log.Println("failed to get last ndx price: ", err)
+					continue
+				}
+				guilds, err := bot.UserGuilds(0, "", "")
+				if err != nil {
+					log.Println("failed to get user guilds error: ", err)
+					continue
+				}
+				for _, guild := range guilds {
+					bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("NDXBot: $%0.2f", price))
+				}
+			}
+		}
+	}()
 }
 
 func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {
