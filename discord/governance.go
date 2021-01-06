@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
@@ -75,6 +76,25 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 	}
 	forVotes, _ := utils.ToDecimal(proposal.ForVotes, 18).Float64()
 	againstVotes, _ := utils.ToDecimal(proposal.AgainstVotes, 18).Float64()
+	_currBlock, err := c.bc.CurrentBlock()
+	if err != nil {
+		log.Println("failed to get current block: ", err)
+		ctx.RespondText("failed to get current block")
+		return
+	}
+	currBlock := big.NewInt(int64(_currBlock))
+
+	var (
+		timeRemaining = time.Duration(0)
+	)
+	// make sure that the current block is less than the end block and greater than the start block
+	// otherwise skip processing and timeRemaining will be 0
+	if currBlock.Int64() < proposal.EndBlock.Int64() && currBlock.Int64() >= proposal.StartBlock.Int64() {
+		remainingBlocks := new(big.Int).Sub(proposal.EndBlock, currBlock)
+		timeRemainingSeconds := new(big.Int).Mul(remainingBlocks, big.NewInt(15))
+		timeRemaining = time.Second * time.Duration(timeRemainingSeconds.Int64())
+	}
+
 	ctx.RespondEmbed(&discordgo.MessageEmbed{
 		Title: "Proposal Overview",
 		Fields: []*discordgo.MessageEmbedField{
@@ -92,7 +112,7 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "ETA",
-				Value: proposal.Eta.String(),
+				Value: fmt.Sprintf("%0.2f hours left to vote (assumes 15s block time)", timeRemaining.Hours()),
 			},
 			&discordgo.MessageEmbedField{
 				Name:  "StartBlock",
