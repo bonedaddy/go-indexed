@@ -176,7 +176,15 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Example:     " uniswap exchange-rate defi5-dai (returns the value of defi5 in terms of dai)",
 				Handler:     client.uniswapExchangeRateHandler,
 			},
+			&dgc.Command{
+				Name:        "price-change",
+				Description: "returns the percent price change for a given pair. currently only supports windows in day granularity. the only supported pairs are eth-dai, defi5-dai, cc10-dai, ndx-dai",
+				Usage:       " uniswap price-change <pair> <window-in-days>",
+				Example:     " uniswap price-change defi5-dai 10 (returns the price change over the last 10 days for defi5)",
+				Handler:     client.uniswapPercentChangeHandler,
+			},
 		},
+
 		Handler: func(ctx *dgc.Ctx) {
 			ctx.RespondText("invalid invocation please run a specific subcommand")
 		},
