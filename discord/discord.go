@@ -55,6 +55,9 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 		log.Println("failed to udpate streaming status: ", err)
 	}
 
+	// updates the main bot's nickname to reflect ndx price
+	ndxPriceWatchRoutine(ctx, dg, wg, db)
+
 	// declare the base router
 	router := dgc.Create(&dgc.Router{
 		Prefixes:         []string{"!ndx"},
@@ -173,7 +176,15 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Example:     " uniswap exchange-rate defi5-dai (returns the value of defi5 in terms of dai)",
 				Handler:     client.uniswapExchangeRateHandler,
 			},
+			&dgc.Command{
+				Name:        "price-change",
+				Description: "returns the percent price change for a given pair. currently only supports windows in day granularity. the only supported pairs are eth-dai, defi5-dai, cc10-dai, ndx-dai",
+				Usage:       " uniswap price-change <pair> <window-in-days>",
+				Example:     " uniswap price-change defi5-dai 10 (returns the price change over the last 10 days for defi5)",
+				Handler:     client.uniswapPercentChangeHandler,
+			},
 		},
+
 		Handler: func(ctx *dgc.Ctx) {
 			ctx.RespondText("invalid invocation please run a specific subcommand")
 		},
@@ -220,6 +231,35 @@ func (c *Client) Close() error {
 	c.cancel()
 	c.wg.Wait()
 	return c.s.Close()
+}
+
+func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.WaitGroup, db *db.Database) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(time.Second * 10)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				price, err := db.LastPrice("ndx")
+				if err != nil {
+					log.Println("failed to get last ndx price: ", err)
+					continue
+				}
+				guilds, err := bot.UserGuilds(0, "", "")
+				if err != nil {
+					log.Println("failed to get user guilds error: ", err)
+					continue
+				}
+				for _, guild := range guilds {
+					bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("NDXBot: $%0.2f", price))
+				}
+			}
+		}
+	}()
 }
 
 func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {

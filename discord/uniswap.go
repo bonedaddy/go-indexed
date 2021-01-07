@@ -86,3 +86,54 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		return
 	}
 }
+
+func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
+	arguments := ctx.Arguments
+	pair := arguments.Get(0).Raw()
+	window, err := arguments.Get(1).AsInt()
+	if err != nil {
+		ctx.RespondText("window argument is not a number")
+		return
+	}
+	// valid the allowed currencies
+	switch strings.ToLower(pair) {
+	case "defi5-dai":
+		price, err := c.db.PriceChangeInRange("defi5", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("defi5 dai price change fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("DEFI5-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		return
+	case "cc10-dai":
+		price, err := c.db.PriceChangeInRange("cc10", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("cc10 dai price change fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("CC10-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		return
+	case "eth-dai":
+		price, err := c.db.PriceChangeInRange("eth", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("cc10 dai price change failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("ETH-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		return
+	case "ndx-dai":
+		price, err := c.db.PriceChangeInRange("ndx", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("ndx dai price change failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("NDX-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+	default:
+		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
+		return
+	}
+}
