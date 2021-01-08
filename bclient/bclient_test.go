@@ -39,8 +39,27 @@ func TestBClient(t *testing.T) {
 		require.Equal(t, "MKR", guessTokenSymbol("0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2"))
 	})
 	t.Run("CC10", func(t *testing.T) {
-		_, err := client.CC10()
+		cc10, err := client.CC10()
 		require.NoError(t, err)
+		t.Run("CC10_MCAP_Controller", func(t *testing.T) {
+			_, err := client.MCAPControllerAt(cc10)
+			require.NoError(t, err)
+		})
+		t.Run("CC10_UNISWAP_ORACLE", func(t *testing.T) {
+			addr, err := client.OracleFor(cc10)
+			require.NoError(t, err)
+			t.Log("cc10 uniswap oracle address: ", addr)
+			orc, err := client.OracleAt(cc10)
+			require.NoError(t, err)
+			tokens, err := client.PoolTokensFor(cc10)
+			require.NoError(t, err)
+			for name, addr := range tokens {
+				// get time weighted average price of token in terms of weth
+				price, err := orc.ComputeAverageTokenPrice(nil, addr, big.NewInt(0), big.NewInt(36288000)) // price between 0 seconds and 7 days
+				require.NoError(t, err)
+				t.Logf("token %s (%s) average eth price %s", addr, name, price.X)
+			}
+		})
 	})
 	t.Run("DEFI5", func(t *testing.T) {
 		defi5, err := client.DEFI5()
