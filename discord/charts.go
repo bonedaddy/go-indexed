@@ -2,6 +2,7 @@ package discord
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"strings"
 
@@ -20,13 +21,11 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		return
 	}
 	var (
-		chartName string
-		prices    []*db.Price
+		prices []*db.Price
 	)
 	// valid the allowed currencies
 	switch strings.ToLower(pair) {
 	case "defi5-dai":
-		chartName = "DEFI5-DAI SMA"
 		prices, err = c.db.PricesInRange("defi5", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
@@ -34,7 +33,6 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			return
 		}
 	case "cc10-dai":
-		chartName = "CC10-DAI SMA"
 		prices, err = c.db.PricesInRange("cc10", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
@@ -42,7 +40,6 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			return
 		}
 	case "ndx-dai":
-		chartName = "NDX-DAI SMA"
 		prices, err = c.db.PricesInRange("ndx", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
@@ -50,7 +47,6 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			return
 		}
 	case "eth-dai":
-		chartName = "ETH-DAI SMA"
 		prices, err = c.db.PricesInRange("eth", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
@@ -61,9 +57,7 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
 		return
 	}
-	mainSeries := chart.TimeSeries{
-		Name: chartName,
-	}
+	mainSeries := chart.TimeSeries{}
 	for _, price := range prices {
 		mainSeries.XValues = append(mainSeries.XValues, price.CreatedAt)
 		// mainSeries.XValues = append(mainSeries.XValues, float64(i))
@@ -73,19 +67,26 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 	smaSeries := &chart.SMASeries{
 		InnerSeries: mainSeries,
 	}
+
 	graph := chart.Chart{
+		Title: fmt.Sprintf("%s %v day window", pair, window),
 		Series: []chart.Series{
 			mainSeries,
 			smaSeries,
 		},
+		XAxis: chart.XAxis{
+			// ensure we render date timestamps with minute granularity
+			ValueFormatter: chart.TimeMinuteValueFormatter,
+		},
 	}
-	graph.XAxis.ValueFormatter = chart.TimeMinuteValueFormatter
+
 	buffer := bytes.NewBuffer(nil)
 	if err := graph.Render(chart.PNG, buffer); err != nil {
 		log.Println("failed to render SMA: ", err)
 		ctx.RespondText("failed to render SMA")
 		return
 	}
+
 	if _, err := ctx.Session.ChannelFileSend(ctx.Event.ChannelID, "chart.png", buffer); err != nil {
 		log.Println("failed to upload chart: ", err)
 		ctx.RespondText("failed to upload chart")
