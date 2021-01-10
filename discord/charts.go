@@ -77,7 +77,7 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			lastHour = 0
 		}
 		if lastHour == 0 {
-			lastHour = price.CreatedAt.Minute()
+			lastHour = price.CreatedAt.Hour()
 			priceHourSeries.XValues = append(priceHourSeries.XValues, price.CreatedAt)
 			priceHourSeries.YValues = append(priceHourSeries.YValues, price.USDPrice)
 		}
