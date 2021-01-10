@@ -183,6 +183,10 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Example:     " uniswap price-change defi5-dai 10 (returns the price change over the last 10 days for defi5)",
 				Handler:     client.uniswapPercentChangeHandler,
 			},
+			&dgc.Command{
+				Name:    "price-chart",
+				Handler: client.priceWindowChart,
+			},
 		},
 
 		Handler: func(ctx *dgc.Ctx) {

@@ -44,6 +44,15 @@ func (d *Database) GetAllPrices(asset string) ([]*Price, error) {
 	return prices, d.db.Model(&Price{}).Where("type = ?", asset).Find(&prices).Error
 }
 
+// PricesInRange returns all prices items in the given range
+func (d *Database) PricesInRange(asset string, windowInDays int) ([]*Price, error) {
+	if !IsValidAsset(asset) {
+		return nil,
+			ErrInvalidAsset
+	}
+	return d.windowRangeQuery(asset, windowInDays)
+}
+
 // PriceAvgInRange returns the average price of the given asset during the last N days
 func (d *Database) PriceAvgInRange(asset string, windowInDays int) (float64, error) {
 	if !IsValidAsset(asset) {
