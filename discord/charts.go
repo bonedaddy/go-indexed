@@ -68,11 +68,33 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		InnerSeries: mainSeries,
 	}
 
+	minSeries := &chart.MinSeries{
+		Name: "sma min",
+		Style: chart.Style{
+			StrokeColor:     chart.ColorAlternateGray,
+			StrokeDashArray: []float64{5.0, 5.0},
+		},
+		InnerSeries: smaSeries,
+	}
+
+	maxSeries := &chart.MaxSeries{
+		Name: "sma max",
+		Style: chart.Style{
+			StrokeColor:     chart.ColorAlternateGray,
+			StrokeDashArray: []float64{5.0, 5.0},
+		},
+		InnerSeries: smaSeries,
+	}
+
 	graph := chart.Chart{
-		Title: fmt.Sprintf("%s %v day window", pair, window),
+		Title:  fmt.Sprintf("%s %v day window", pair, window),
+		Width:  1920,
+		Height: 1080,
 		Series: []chart.Series{
 			mainSeries,
 			smaSeries,
+			minSeries,
+			maxSeries,
 		},
 		XAxis: chart.XAxis{
 			// ensure we render date timestamps with minute granularity
