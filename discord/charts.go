@@ -28,32 +28,36 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			log.Println("defi5 dai price change fetch failed: ", err)
 			return
 		}
-		graph := chart.Chart{
-			Title: "DEFI5-DAI Bar Chart",
-			Background: chart.Style{
-				Padding: chart.Box{
-					Top: 40,
-				},
-			},
-			Height: 512,
-			Series: []chart.Series{
-				chart.ContinuousSeries{
-					// stuff here
-				},
-			},
+		mainSeries := chart.ContinuousSeries{
+			Name: "DEFI5-DAI SMA",
+			// XValues are unix timestamps
+			// YValues are prices
 		}
 		for _, price := range prices {
-			graph.Bars = append(graph.Bars, chart.Value{
-				Label: price.CreatedAt.String(),
-				Value: price.USDPrice,
-			})
+			mainSeries.XValues = append(mainSeries.XValues, float64(price.CreatedAt.Unix()))
+			mainSeries.YValues = append(mainSeries.YValues, price.USDPrice)
+		}
+
+		smaSeries := &chart.SMASeries{
+			InnerSeries: mainSeries,
+		}
+		graph := chart.Chart{
+			Series: []chart.Series{
+				mainSeries,
+				smaSeries,
+			},
 		}
 		buffer := bytes.NewBuffer(nil)
 		if err := graph.Render(chart.PNG, buffer); err != nil {
-			log.Println("error rendering: ", err)
+			log.Println("failed to render SMA: ", err)
+			ctx.RespondText("failed to render SMA")
 			return
 		}
-		ctx.Session.ChannelFileSend(ctx.Event.ChannelID, "chart.png", buffer)
+		if _, err := ctx.Session.ChannelFileSend(ctx.Event.ChannelID, "chart.png", buffer); err != nil {
+			log.Println("failed to upload chart: ", err)
+			ctx.RespondText("failed to upload chart")
+			return
+		}
 		return
 	default:
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
