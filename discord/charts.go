@@ -2,13 +2,13 @@ package discord
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/wcharczuk/go-chart/v2"
+	"github.com/wcharczuk/go-chart/v2/drawing"
 )
 
 func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
@@ -57,48 +57,45 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
 		return
 	}
-	mainSeries := chart.TimeSeries{}
+	priceSeries := chart.TimeSeries{
+		Name: pair,
+		Style: chart.Style{
+			StrokeColor: chart.GetDefaultColor(0),
+		},
+	}
 	for _, price := range prices {
-		mainSeries.XValues = append(mainSeries.XValues, price.CreatedAt)
-		// mainSeries.XValues = append(mainSeries.XValues, float64(i))
-		mainSeries.YValues = append(mainSeries.YValues, price.USDPrice)
+		priceSeries.XValues = append(priceSeries.XValues, price.CreatedAt)
+		priceSeries.YValues = append(priceSeries.YValues, price.USDPrice)
 	}
 
 	smaSeries := &chart.SMASeries{
-		InnerSeries: mainSeries,
+		Name: pair + " - " + "sma",
+		Style: chart.Style{
+			StrokeColor: drawing.ColorRed,
+		},
+		InnerSeries: priceSeries,
 	}
 
-	minSeries := &chart.MinSeries{
-		Name: "sma min",
+	bbSeries := &chart.BollingerBandsSeries{
+		Name: pair + " - bol. bands",
 		Style: chart.Style{
-			StrokeColor:     chart.ColorAlternateGray,
-			StrokeDashArray: []float64{5.0, 5.0},
+			StrokeColor: drawing.ColorBlack,
+			//StrokeColor: drawing.ColorFromHex("efefef"),
+			FillColor: drawing.ColorFromHex("efefef").WithAlpha(64),
 		},
-		InnerSeries: smaSeries,
-	}
-
-	maxSeries := &chart.MaxSeries{
-		Name: "sma max",
-		Style: chart.Style{
-			StrokeColor:     chart.ColorAlternateGray,
-			StrokeDashArray: []float64{5.0, 5.0},
-		},
-		InnerSeries: smaSeries,
+		InnerSeries: priceSeries,
 	}
 
 	graph := chart.Chart{
-		Title:  fmt.Sprintf("%s %v day window", pair, window),
-		Width:  1920,
-		Height: 1080,
-		Series: []chart.Series{
-			mainSeries,
-			smaSeries,
-			minSeries,
-			maxSeries,
-		},
 		XAxis: chart.XAxis{
+			TickPosition: chart.TickPositionBetweenTicks,
 			// ensure we render date timestamps with minute granularity
 			ValueFormatter: chart.TimeMinuteValueFormatter,
+		},
+		Series: []chart.Series{
+			bbSeries,
+			priceSeries,
+			smaSeries,
 		},
 	}
 
