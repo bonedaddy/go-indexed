@@ -69,7 +69,8 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 	}
 
 	smaSeries := &chart.SMASeries{
-		Name: pair + " - " + "sma",
+		Name:   pair + " - " + "sma",
+		Period: window,
 		Style: chart.Style{
 			StrokeColor:     drawing.ColorRed,
 			StrokeDashArray: []float64{5.0, 5.0},
@@ -79,7 +80,7 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 
 	bbSeries := &chart.BollingerBandsSeries{
 		Name:   pair + " - bol. bands",
-		Period: 20,
+		Period: window,
 		K:      2,
 		Style: chart.Style{
 			StrokeColor: drawing.ColorFromHex("efefef"),
@@ -96,8 +97,8 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		},
 		Series: []chart.Series{
 			bbSeries,
-			priceSeries,
 			smaSeries,
+			priceSeries,
 		},
 	}
 
