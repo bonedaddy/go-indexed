@@ -77,7 +77,9 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 	}
 
 	bbSeries := &chart.BollingerBandsSeries{
-		Name: pair + " - bol. bands",
+		Name:   pair + " - bol. bands",
+		Period: 20,
+		K:      2,
 		Style: chart.Style{
 			StrokeColor: drawing.ColorBlack,
 			//StrokeColor: drawing.ColorFromHex("efefef"),
