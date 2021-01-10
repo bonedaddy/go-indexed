@@ -6,16 +6,24 @@ import (
 )
 
 var (
-	defi5Addr           = "0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41"
-	defi5StakeAddr      = "0x11bf850D1B85eA02eF9F06Cf09488E443655b586"
+	defi5Addr      = "0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41"
+	defi5StakeAddr = "0x11bf850D1B85eA02eF9F06Cf09488E443655b586"
+	// ETH-DEFI5 stake contract
 	defi5UNILPStakeAddr = "0x04834fE50BE6954088d979A84bE20913efCA9118"
-	cc10Addr            = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
+	// ETH-CC10 stake contract
+	cc10UNILPStakeAddr = "0x08F0d214d6A80520F18E6837e2cc40899E67B5c0"
+	cc10Addr           = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
+	cc10StakeAddr      = "0xE1dE5Ebd607f1Da1c34D78b760B9C87901d0Ba35"
 	// DEFI5TokenAddress is the address of the DEFI5 token/pool contract
 	DEFI5TokenAddress = common.HexToAddress(defi5Addr)
 	// DEFI5StakingAddress is the address of the DEFI5 staking contract
 	DEFI5StakingAddress = common.HexToAddress(defi5StakeAddr)
+	// CC10StakingAddress is the address of the CC10 staking contract
+	CC10StakingAddress = common.HexToAddress(cc10StakeAddr)
 	// DEFI5UNILPStakingAddress is the address of the ETH-DEFI5 Uniswap staking contract
 	DEFI5UNILPStakingAddress = common.HexToAddress(defi5UNILPStakeAddr)
+	// CC10UNILPStakingAddress is the address of the ETH-CC10 uniswap staking contract
+	CC10UNILPStakingAddress = common.HexToAddress(cc10UNILPStakeAddr)
 	// CC10TokenAddress is the address of the CC10 token/pool contract
 	CC10TokenAddress = common.HexToAddress(cc10Addr)
 	// WETHTokenAddress is the address of the WETH token contract

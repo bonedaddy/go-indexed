@@ -141,7 +141,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 
 	router.RegisterCmd(&dgc.Command{
 		Name:        "stake-earned",
-		Description: "returns the amount of stake earned, currently supports defi5 and univ2-eth-defi5 stake contracts",
+		Description: "returns the amount of stake earned. <stake-type> can be one of: defi5, univ2-eth-defi5, cc10, univ2-eth-cc10",
 		Usage:       " stake-earned <stake-type> <account>",
 		Example:     " stake-earned defi5 0x5a361A1dfd52538A158e352d21B5b622360a7C13",
 		IgnoreCase:  true,
