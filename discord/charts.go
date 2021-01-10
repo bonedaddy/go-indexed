@@ -63,7 +63,28 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			StrokeColor: chart.GetDefaultColor(0),
 		},
 	}
+	priceMinuteSeries := chart.TimeSeries{
+		Name: pair,
+		Style: chart.Style{
+			StrokeColor: chart.GetDefaultColor(0),
+		},
+	}
+	var lastHour int
 	for _, price := range prices {
+		if price.CreatedAt.Hour() == 0 {
+			// reset
+			lastHour = 0
+		}
+		if lastHour == 0 {
+			lastHour = price.CreatedAt.Minute()
+			priceMinuteSeries.XValues = append(priceMinuteSeries.XValues, price.CreatedAt)
+			priceMinuteSeries.YValues = append(priceMinuteSeries.YValues, price.USDPrice)
+		}
+		if price.CreatedAt.Hour() > lastHour {
+			lastHour = price.CreatedAt.Hour()
+			priceMinuteSeries.XValues = append(priceMinuteSeries.XValues, price.CreatedAt)
+			priceMinuteSeries.YValues = append(priceMinuteSeries.YValues, price.USDPrice)
+		}
 		priceSeries.XValues = append(priceSeries.XValues, price.CreatedAt)
 		priceSeries.YValues = append(priceSeries.YValues, price.USDPrice)
 	}
@@ -72,10 +93,10 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		Name:   pair + " - " + "sma",
 		Period: window,
 		Style: chart.Style{
-			StrokeColor:     drawing.ColorRed,
-			StrokeDashArray: []float64{5.0, 5.0},
+			StrokeColor: drawing.ColorRed,
+			// StrokeDashArray: []float64{5.0, 5.0},
 		},
-		InnerSeries: priceSeries,
+		InnerSeries: priceMinuteSeries,
 	}
 
 	bbSeries := &chart.BollingerBandsSeries{
@@ -97,8 +118,8 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		},
 		Series: []chart.Series{
 			bbSeries,
-			smaSeries,
 			priceSeries,
+			smaSeries,
 		},
 	}
 
