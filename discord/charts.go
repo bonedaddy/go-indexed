@@ -71,13 +71,18 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		},
 	}
 	var (
-		set = make(map[int]bool)
+		// set = make(map[int]bool)
+		set = make(map[int]map[int]bool)
+		// track days -> hours
 	)
 	for _, price := range prices {
-		if !set[price.CreatedAt.Hour()] {
+		if set[price.CreatedAt.Day()] == nil {
+			set[price.CreatedAt.Day()] = make(map[int]bool)
+		}
+		if !set[price.CreatedAt.Day()][price.CreatedAt.Hour()] {
 			priceHourSeries.XValues = append(priceHourSeries.XValues, price.CreatedAt)
 			priceHourSeries.YValues = append(priceHourSeries.YValues, price.USDPrice)
-			set[price.CreatedAt.Hour()] = true
+			set[price.CreatedAt.Day()][price.CreatedAt.Hour()] = true
 		}
 		priceSeries.XValues = append(priceSeries.XValues, price.CreatedAt)
 		priceSeries.YValues = append(priceSeries.YValues, price.USDPrice)
