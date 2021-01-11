@@ -70,21 +70,14 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			StrokeColor: chart.GetDefaultColor(0),
 		},
 	}
-	var lastHour int
+	var (
+		set = make(map[int]bool)
+	)
 	for _, price := range prices {
-		if price.CreatedAt.Hour() == 0 {
-			// reset
-			lastHour = 0
-		}
-		if lastHour == 0 {
-			lastHour = price.CreatedAt.Hour()
+		if !set[price.CreatedAt.Hour()] {
 			priceHourSeries.XValues = append(priceHourSeries.XValues, price.CreatedAt)
 			priceHourSeries.YValues = append(priceHourSeries.YValues, price.USDPrice)
-		}
-		if price.CreatedAt.Hour() > lastHour {
-			lastHour = price.CreatedAt.Hour()
-			priceHourSeries.XValues = append(priceHourSeries.XValues, price.CreatedAt)
-			priceHourSeries.YValues = append(priceHourSeries.YValues, price.USDPrice)
+			set[price.CreatedAt.Hour()] = true
 		}
 		priceSeries.XValues = append(priceSeries.XValues, price.CreatedAt)
 		priceSeries.YValues = append(priceSeries.YValues, price.USDPrice)
