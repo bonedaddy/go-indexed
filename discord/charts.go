@@ -71,20 +71,31 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 	}
 	var (
 		// set = make(map[int]bool)
-		set = make(map[int]map[int]bool)
+		hourSet = make(map[int]map[int]bool)
+		minSet  = make(map[int]map[int]map[int]bool)
 		// track days -> hours
 	)
 	for _, price := range prices {
-		if set[price.CreatedAt.Day()] == nil {
-			set[price.CreatedAt.Day()] = make(map[int]bool)
+		if hourSet[price.CreatedAt.Day()] == nil {
+			hourSet[price.CreatedAt.Day()] = make(map[int]bool)
 		}
-		if !set[price.CreatedAt.Day()][price.CreatedAt.Hour()] {
+		if minSet[price.CreatedAt.Day()] == nil {
+			minSet[price.CreatedAt.Day()] = make(map[int]map[int]bool)
+		}
+		if minSet[price.CreatedAt.Day()][price.CreatedAt.Hour()] == nil {
+			minSet[price.CreatedAt.Day()][price.CreatedAt.Hour()] = make(map[int]bool)
+		}
+		// make sure we only update the hour set one per hour
+		if !hourSet[price.CreatedAt.Day()][price.CreatedAt.Hour()] {
 			priceHourSeries.XValues = append(priceHourSeries.XValues, price.CreatedAt)
 			priceHourSeries.YValues = append(priceHourSeries.YValues, price.USDPrice)
-			set[price.CreatedAt.Day()][price.CreatedAt.Hour()] = true
+			hourSet[price.CreatedAt.Day()][price.CreatedAt.Hour()] = true
 		}
-		priceSeries.XValues = append(priceSeries.XValues, price.CreatedAt)
-		priceSeries.YValues = append(priceSeries.YValues, price.USDPrice)
+		// make sure we only record one price per minute
+		if !minSet[price.CreatedAt.Day()][price.CreatedAt.Hour()][price.CreatedAt.Minute()] {
+			priceSeries.XValues = append(priceSeries.XValues, price.CreatedAt)
+			priceSeries.YValues = append(priceSeries.YValues, price.USDPrice)
+		}
 	}
 
 	hourlySMASeries := &chart.SMASeries{
