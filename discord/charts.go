@@ -99,17 +99,6 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		InnerSeries: priceHourSeries,
 	}
 
-	bbSeries := &chart.BollingerBandsSeries{
-		Name:   pair + " - bol. bands",
-		Period: window,
-		K:      2,
-		Style: chart.Style{
-			StrokeColor: drawing.ColorFromHex("efefef"),
-			FillColor:   drawing.ColorFromHex("efefef").WithAlpha(64),
-		},
-		InnerSeries: priceSeries,
-	}
-
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
 			TickPosition: chart.TickPositionBetweenTicks,
@@ -117,7 +106,6 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			ValueFormatter: chart.TimeMinuteValueFormatter,
 		},
 		Series: []chart.Series{
-			bbSeries,
 			priceSeries,
 			hourlySMASeries,
 		},
