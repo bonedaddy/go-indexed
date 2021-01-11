@@ -58,14 +58,13 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		return
 	}
 	priceSeries := chart.TimeSeries{
-		Name: pair,
+		Name: "price",
 		Style: chart.Style{
 			StrokeColor: chart.GetDefaultColor(0),
 		},
 	}
 	// records prices at every hour
 	priceHourSeries := chart.TimeSeries{
-		Name: pair,
 		Style: chart.Style{
 			StrokeColor: chart.GetDefaultColor(0),
 		},
@@ -89,15 +88,28 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 	}
 
 	hourlySMASeries := &chart.SMASeries{
-		Name:   pair + " - " + "sma",
+		Name:   "hourly sma",
 		Period: window,
 		Style: chart.Style{
 			StrokeColor: drawing.ColorRed,
 		},
 		InnerSeries: priceHourSeries,
 	}
+	hourlyEMASeries := &chart.EMASeries{
+		Name:   "hourly ema",
+		Period: window,
+		Style: chart.Style{
+			StrokeColor: drawing.ColorGreen,
+		},
+		InnerSeries: priceHourSeries,
+	}
 
 	graph := chart.Chart{
+		Background: chart.Style{
+			Padding: chart.Box{
+				Left: 45,
+			},
+		},
 		XAxis: chart.XAxis{
 			TickPosition: chart.TickPositionBetweenTicks,
 			// ensure we render date timestamps with minute granularity
@@ -106,7 +118,13 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		Series: []chart.Series{
 			priceSeries,
 			hourlySMASeries,
+			hourlyEMASeries,
 		},
+	}
+
+	//note we have to do this as a separate step because we need a reference to graph
+	graph.Elements = []chart.Renderable{
+		chart.LegendLeft(&graph),
 	}
 
 	buffer := bytes.NewBuffer(nil)
