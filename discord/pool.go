@@ -62,17 +62,10 @@ func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
 }
 
 func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
-	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
-		return
-	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
-	ip, err := c.getIndexPool(poolName)
-	if err != nil {
-		ctx.RespondText("invalid pool")
-		return
-	}
-	tvl, err := c.bc.GetTotalValueLocked(ip)
+
+	tvl, err := c.db.LastValueLocked(strings.ToLower(poolName))
 	if err != nil {
 		log.Println("failed to get total value locked: ", err)
 		ctx.RespondText("failed to get total value locked")
