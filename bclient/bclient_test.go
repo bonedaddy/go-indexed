@@ -41,6 +41,11 @@ func TestBClient(t *testing.T) {
 	t.Run("CC10", func(t *testing.T) {
 		cc10, err := client.CC10()
 		require.NoError(t, err)
+
+		tvl, err := client.GetTotalValueLocked(cc10)
+		require.NoError(t, err)
+		t.Log("total value locked: ", tvl)
+
 		t.Run("CC10_MCAP_Controller", func(t *testing.T) {
 			_, err := client.MCAPControllerAt(cc10)
 			require.NoError(t, err)
@@ -64,6 +69,10 @@ func TestBClient(t *testing.T) {
 	t.Run("DEFI5", func(t *testing.T) {
 		defi5, err := client.DEFI5()
 		require.NoError(t, err)
+
+		tvl, err := client.GetTotalValueLocked(defi5)
+		require.NoError(t, err)
+		t.Log("total value locked: ", tvl)
 
 		max, err := defi5.GetMaxPoolTokens(nil)
 		require.NoError(t, err)

@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/bonedaddy/dgc"
@@ -42,7 +43,6 @@ func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
 func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
 	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
 		return
-
 	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
@@ -59,4 +59,24 @@ func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
 	}
 	balF, _ := bal.Float64()
 	ctx.RespondText(fmt.Sprintf("account balance for %s: %0.2f", accountAddr, balF))
+}
+
+func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
+	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
+		return
+	}
+	arguments := ctx.Arguments
+	poolName := arguments.Get(0).Raw()
+	ip, err := c.getIndexPool(poolName)
+	if err != nil {
+		ctx.RespondText("invalid pool")
+		return
+	}
+	tvl, err := c.bc.GetTotalValueLocked(ip)
+	if err != nil {
+		log.Println("failed to get total value locked: ", err)
+		ctx.RespondText("failed to get total value locked")
+		return
+	}
+	ctx.RespondText(fmt.Sprintf("total value locked for %s: %0.2f", poolName, tvl))
 }

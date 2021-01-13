@@ -131,6 +131,19 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 					ctx.RespondText(rateLimitMsg)
 				}),
 			},
+			&dgc.Command{
+				Name:        "total-value-locked",
+				Aliases:     []string{"tvl"},
+				Description: "returns the total value locked within a pool in terms of USD",
+				Usage:       " pool total-value-locked <pool-name>",
+				Example:     " pool total-value-locked defi5",
+				IgnoreCase:  true,
+				Handler:     client.poolTotalValueLocked,
+				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText(rateLimitMsg)
+				}),
+			},
 		},
 		Usage:   " pool <subcommand> <args...>",
 		Example: " pool current-tokens defi5\n!ndx help pool current-tokens",
