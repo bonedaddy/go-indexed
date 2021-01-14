@@ -13,10 +13,12 @@ import (
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bwmarrin/discordgo"
+	"golang.org/x/text/message"
 )
 
 var (
 	rateLimitMsg = "You are being rate limited. Users are allowed 1 blockchain query per command every 60 seconds"
+	printer      *message.Printer
 )
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
@@ -29,6 +31,10 @@ type Client struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     *sync.WaitGroup
+}
+
+func init() {
+	printer = message.NewPrinter(message.MatchLanguage("en"))
 }
 
 // NewClient provides a wrapper around discordgo

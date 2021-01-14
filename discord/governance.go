@@ -161,5 +161,5 @@ func (c *Client) governanceTokenTotalSupply(ctx *dgc.Ctx) {
 		return
 	}
 	supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-	ctx.RespondText(fmt.Sprintf("ndx token total supply: %0.2f", supplyF))
+	ctx.RespondText(printer.Sprintf("ndx token total supply: %0.2f", supplyF))
 }

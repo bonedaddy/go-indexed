@@ -72,7 +72,7 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 		ctx.RespondText("failed to get total value locked")
 		return
 	}
-	ctx.RespondText(fmt.Sprintf("total value locked for %s: %0.2f", poolName, tvl))
+	ctx.RespondText(printer.Sprintf("total value locked for %s: $%0.2f", poolName, tvl))
 }
 
 func (c *Client) poolTotalSupply(ctx *dgc.Ctx) {
@@ -92,5 +92,5 @@ func (c *Client) poolTotalSupply(ctx *dgc.Ctx) {
 		return
 	}
 	supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-	ctx.RespondText(fmt.Sprintf("total supply for %s: %0.2f", poolName, supplyF))
+	ctx.RespondText(printer.Sprintf("total supply for %s: %0.2f", poolName, supplyF))
 }
