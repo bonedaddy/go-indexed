@@ -46,6 +46,26 @@ func TestBClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Log("total value locked: ", tvl)
 
+		max, err := cc10.GetMaxPoolTokens(nil)
+		require.NoError(t, err)
+		t.Log("max pool tokens: ", max)
+
+		bal, err := cc10.BalanceOf(nil, myAddress)
+		require.NoError(t, err)
+		t.Log("balance of: ", bal)
+
+		dec, err := cc10.Decimals(nil)
+		require.NoError(t, err)
+		t.Log("decimals: ", dec)
+
+		cont, err := cc10.GetController(nil)
+		require.NoError(t, err)
+		t.Log("controller: ", cont)
+
+		l, err := BalanceOfDecimal(cc10, myAddress)
+		require.NoError(t, err)
+		t.Log("balance decimal: ", l)
+
 		t.Run("CC10_MCAP_Controller", func(t *testing.T) {
 			_, err := client.MCAPControllerAt(cc10)
 			require.NoError(t, err)
@@ -135,6 +155,20 @@ func TestStaking(t *testing.T) {
 		require.NoError(t, err)
 		t.Log("tokens earned: ", earned)
 		_, err = client.StakingAt("univ2-eth-defi5")
+		require.NoError(t, err)
+	})
+	t.Run("CC10_Staking", func(t *testing.T) {
+		cc10, err := client.CC10()
+		require.NoError(t, err)
+		stake, err := client.StakingAt("cc10")
+		require.NoError(t, err)
+		bal, err := StakeBalanceOf(stake, cc10, myAddress)
+		require.NoError(t, err)
+		t.Log("tokens staked: ", bal)
+		earned, err := StakeEarned(stake, cc10, myAddress)
+		require.NoError(t, err)
+		t.Log("tokens earned: ", earned)
+		_, err = client.StakingAt("univ2-eth-cc10")
 		require.NoError(t, err)
 	})
 }
