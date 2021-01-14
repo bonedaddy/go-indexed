@@ -54,3 +54,8 @@ testenv:
 .PHONY: testenv-clean
 testenv-clean:
 	docker-compose up -d --force-recreate
+
+
+.PHONY: db-backup
+db-backup:
+	.scripts/db_backup.sh
