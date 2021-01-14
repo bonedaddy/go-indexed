@@ -13,10 +13,12 @@ import (
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bwmarrin/discordgo"
+	"golang.org/x/text/message"
 )
 
 var (
 	rateLimitMsg = "You are being rate limited. Users are allowed 1 blockchain query per command every 60 seconds"
+	printer      *message.Printer
 )
 
 // Client wraps bclient and discordgo to provide a discord bot for indexed finance
@@ -29,6 +31,10 @@ type Client struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     *sync.WaitGroup
+}
+
+func init() {
+	printer = message.NewPrinter(message.MatchLanguage("en"))
 }
 
 // NewClient provides a wrapper around discordgo
@@ -140,6 +146,18 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				IgnoreCase:  true,
 				Handler:     client.poolTotalValueLocked,
 			},
+			&dgc.Command{
+				Name:        "total-supply",
+				Description: "returns the total supply of pool tokens",
+				Usage:       " pool total-supply <pool-name>",
+				Example:     " pool total-supply cc10",
+				IgnoreCase:  true,
+				Handler:     client.poolTotalSupply,
+				// We want the user to be able to execute this command once in 60 seconds and the cleanup interval shpuld be one second
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText(rateLimitMsg)
+				}),
+			},
 		},
 		Usage:   " pool <subcommand> <args...>",
 		Example: " pool current-tokens defi5\n!ndx help pool current-tokens",
@@ -224,6 +242,17 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 				Example:     " governance proposal-info 1 (returns information on the first proposal ever submitted)",
 				Description: "returns information about the given proposal where <number> represents the proposal submission number. the first proposal submitted would have a submission number of 1, the second proposal submitted would have a submission number of 2, etc...",
 				Handler:     client.governanceProposalInfoHandler,
+				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
+					ctx.RespondText(rateLimitMsg)
+				}),
+			},
+			&dgc.Command{
+				Name:        "total-supply",
+				Usage:       " governance total-supply",
+				Example:     " governance total-supply",
+				Description: "returns the total supply of the governance token, NDX",
+				IgnoreCase:  true,
+				Handler:     client.governanceTokenTotalSupply,
 				RateLimiter: dgc.NewRateLimiter(60*time.Second, 1*time.Second, func(ctx *dgc.Ctx) {
 					ctx.RespondText(rateLimitMsg)
 				}),

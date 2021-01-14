@@ -30,6 +30,7 @@ type IndexPoolRead interface {
 	ExtrapolatePoolValueFromToken(opts *bind.CallOpts) (common.Address, *big.Int, error)
 	BalanceOf(opts *bind.CallOpts, whom common.Address) (*big.Int, error)
 	Decimals(opts *bind.CallOpts) (uint8, error)
+	TotalSupply(opts *bind.CallOpts) (*big.Int, error)
 }
 
 // IndexPool provides helper functions around the IndexPool contract

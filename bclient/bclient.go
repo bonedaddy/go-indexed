@@ -49,6 +49,11 @@ func (c *Client) CurrentBlock() (uint64, error) {
 	return c.ec.BlockNumber(context.Background())
 }
 
+// NDX returns an NDX contract binding
+func (c *Client) NDX() (*erc20.Erc20, error) {
+	return erc20.NewErc20(NDXTokenAddress, c.ec)
+}
+
 // DEFI5 returns a DEFI5 contract binding
 func (c *Client) DEFI5() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(DEFI5TokenAddress, c.ec)
