@@ -8,3 +8,5 @@ files
 release/
 
 *.db
+
+db_backups/
