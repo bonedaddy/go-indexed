@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -108,18 +109,24 @@ func UpdateMetrics(ctx context.Context, database *db.Database, bc *bclient.Clien
 				if supply, err := erc.TotalSupply(nil); err == nil {
 					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
 					ndxTotalSupply.Set(supplyF)
+				} else {
+					log.Println("failed to get total supply: ", err)
 				}
 			}
 			if erc, err := bc.DEFI5(); err == nil {
 				if supply, err := erc.TotalSupply(nil); err == nil {
 					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
 					ndxTotalSupply.Set(supplyF)
+				} else {
+					log.Println("failed to get total supply: ", err)
 				}
 			}
 			if erc, err := bc.CC10(); err == nil {
 				if supply, err := erc.TotalSupply(nil); err == nil {
 					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
 					ndxTotalSupply.Set(supplyF)
+				} else {
+					log.Println("failed to get total supply: ", err)
 				}
 			}
 		}
