@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/dashboard"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bonedaddy/go-indexed/discord"
 	"github.com/ethereum/go-ethereum/common"
@@ -82,6 +83,59 @@ func main() {
 		return err
 	}
 	app.Commands = cli.Commands{
+		&cli.Command{
+			Name:  "prometheus",
+			Usage: "serves the prometheus metric endpoint",
+			Action: func(c *cli.Context) error {
+				ctx, cancel := context.WithCancel(c.Context)
+				defer cancel()
+				cfg, err := discord.LoadConfig(c.String("config"))
+				if err != nil {
+					return err
+				}
+				if cfg.InfuraAPIKey != "" {
+					bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
+				} else {
+					bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
+				}
+				if err != nil {
+					return err
+				}
+				defer bc.Close()
+				database, err := db.New(&db.Opts{
+					Type:           cfg.Database.Type,
+					Host:           cfg.Database.Host,
+					Port:           cfg.Database.Port,
+					User:           cfg.Database.User,
+					Password:       cfg.Database.Pass,
+					DBName:         cfg.Database.DBName,
+					SSLModeDisable: cfg.Database.SSLModeDisable,
+				})
+				if err != nil {
+					return err
+				}
+				defer database.Close()
+				if err := database.AutoMigrate(); err != nil {
+					return err
+				}
+				// serve prometheus metrics
+				go dashboard.ServePrometheusMetrics(ctx, c.String("listen.address"))
+				// update metrics information
+				go dashboard.UpdateMetrics(ctx, database, bc)
+				sc := make(chan os.Signal, 1)
+				signal.Notify(sc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
+				<-sc
+				cancel()
+				return nil
+			},
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "listen.address",
+					Usage: "the address we will expose the metrics listener on",
+					Value: "0.0.0.0:9123",
+				},
+			},
+		},
 		&cli.Command{
 			Name:  "discord",
 			Usage: "discord bot management",

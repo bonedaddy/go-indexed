@@ -3,7 +3,11 @@ package dashboard
 import (
 	"context"
 	"net/http"
+	"time"
 
+	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/db"
+	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -71,4 +75,53 @@ func ServePrometheusMetrics(ctx context.Context, listenAddr string) error {
 		srv.Close()
 	}()
 	return srv.ListenAndServe()
+}
+
+// UpdateMetrics is used to update the prometheus metrics
+func UpdateMetrics(ctx context.Context, database *db.Database, bc *bclient.Client) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// set price information
+			if price, err := database.LastPrice("ndx"); err == nil {
+				ndxDaiPrice.Set(price)
+			}
+			if price, err := database.LastPrice("defi5"); err == nil {
+				defi5DaiPrice.Set(price)
+			}
+			if price, err := database.LastPrice("cc10"); err == nil {
+				cc10DaiPrice.Set(price)
+			}
+			// set tvl information
+			if tvl, err := database.LastValueLocked("cc10"); err == nil {
+				cc10TVL.Set(tvl)
+			}
+			if tvl, err := database.LastValueLocked("defi5"); err == nil {
+				defi5TVL.Set(tvl)
+			}
+			// set total supply information
+			if erc, err := bc.NDX(); err == nil {
+				if supply, err := erc.TotalSupply(nil); err == nil {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					ndxTotalSupply.Set(supplyF)
+				}
+			}
+			if erc, err := bc.DEFI5(); err == nil {
+				if supply, err := erc.TotalSupply(nil); err == nil {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					ndxTotalSupply.Set(supplyF)
+				}
+			}
+			if erc, err := bc.CC10(); err == nil {
+				if supply, err := erc.TotalSupply(nil); err == nil {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					ndxTotalSupply.Set(supplyF)
+				}
+			}
+		}
+	}
 }
