@@ -131,6 +131,15 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 					ctx.RespondText(rateLimitMsg)
 				}),
 			},
+			&dgc.Command{
+				Name:        "total-value-locked",
+				Aliases:     []string{"tvl"},
+				Description: "returns the total value locked within a pool in terms of USD. tvl is updated once per hour",
+				Usage:       " pool total-value-locked <pool-name>",
+				Example:     " pool total-value-locked defi5",
+				IgnoreCase:  true,
+				Handler:     client.poolTotalValueLocked,
+			},
 		},
 		Usage:   " pool <subcommand> <args...>",
 		Example: " pool current-tokens defi5\n!ndx help pool current-tokens",

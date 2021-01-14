@@ -277,10 +277,76 @@ func main() {
 func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database) {
 	ticker := time.NewTicker(time.Second * 30)
 	defer ticker.Stop()
+	// this will tick less frequently as its an extremely expensive RPC to calculate
+	// a single price update likely requires 100 -> 150 RPC calls
+	tvlTicker := time.NewTicker(time.Hour)
+	defer tvlTicker.Stop()
+
+	// update the tvl price before looping to insert some data
+	go func() {
+		cc10, err := bc.CC10()
+		if err != nil {
+			log.Println("failed to get cc10 for tvl price update: ", err)
+			return
+		}
+		defi5, err := bc.DEFI5()
+		if err != nil {
+			log.Println("failed to get defi5 for tvl price udpate: ", err)
+			return
+		}
+		cc10TVL, err := bc.GetTotalValueLocked(cc10)
+		if err != nil {
+			log.Println("failed to get total value locked for cc10: ", err)
+			return
+		}
+		defi5TVL, err := bc.GetTotalValueLocked(defi5)
+		if err != nil {
+			log.Println("failed to get total value locked for defi5: ", err)
+			return
+		}
+		if err := db.RecordValueLocked("defi5", defi5TVL); err != nil {
+			log.Println("failed to update tvl for defi5: ", err)
+			return
+		}
+		if err := db.RecordValueLocked("cc10", cc10TVL); err != nil {
+			log.Println("failed to update tvl for cc10: ", err)
+			return
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-tvlTicker.C:
+			cc10, err := bc.CC10()
+			if err != nil {
+				log.Println("failed to get cc10 for tvl price update: ", err)
+			} else {
+				cc10TVL, err := bc.GetTotalValueLocked(cc10)
+				if err != nil {
+					log.Println("failed to get total value locked for cc10: ", err)
+				} else {
+					if err := db.RecordValueLocked("cc10", cc10TVL); err != nil {
+						log.Println("failed to update tvl for cc10: ", err)
+					}
+				}
+			}
+
+			defi5, err := bc.DEFI5()
+			if err != nil {
+				log.Println("failed to get defi5 for tvl price udpate: ", err)
+			} else {
+				defi5TVL, err := bc.GetTotalValueLocked(defi5)
+				if err != nil {
+					log.Println("failed to get total value locked for defi5: ", err)
+				} else {
+					if err := db.RecordValueLocked("defi5", defi5TVL); err != nil {
+						log.Println("failed to update tvl for defi5: ", err)
+					}
+				}
+			}
+
 		case <-ticker.C:
 			// update defi5 price
 			price, err := bc.Defi5DaiPrice()

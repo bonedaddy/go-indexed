@@ -2,10 +2,13 @@ package bclient
 
 import (
 	"math/big"
+	"strings"
 
+	"github.com/bonedaddy/go-indexed/bindings/erc20"
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
 
@@ -45,4 +48,95 @@ func BalanceOfDecimal(ip IndexPool, addr common.Address) (decimal.Decimal, error
 		return decimal.Decimal{}, err
 	}
 	return utils.ToDecimal(bal, int(dec)), nil
+}
+
+// GetTotalValueLocked returns the total value locked into the contracts
+func (c *Client) GetTotalValueLocked(ip IndexPool) (float64, error) {
+	tokens, err := c.PoolTokensFor(ip)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get pool tokens")
+	}
+
+	uc := c.Uniswap()
+
+	type tokenValue struct {
+		tokenUsdValue float64        // the value of a single token
+		tokenAddress  common.Address // the address of the token contract
+	}
+
+	values := make(map[string]*tokenValue)
+
+	for symbol, addr := range tokens {
+		// hard coded list for alternate price lookups of X->ETH->DAI
+		switch strings.ToLower(symbol) {
+		case "crv", "uma", "omg", "yfi":
+			erc, err := erc20.NewErc20(addr, c.ec)
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to get erc20 contract")
+			}
+			dec, err := erc.Decimals(nil)
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to get decimals")
+			}
+
+			tokenEthPrice, err := uc.GetExchangeAmount(utils.ToWei("1.0", int(dec)), addr, WETHTokenAddress)
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to get exchange amount")
+			}
+			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(dec))
+
+			ethDaiPrice, err := c.EthDaiPrice()
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to get dai price")
+			}
+			ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+
+			// derive price of token by getting the amount of ETH you would get from 1 token
+			// and convert that into dai
+			tdF, _ := tokenEthPriceDec.Float64()
+			edF, _ := ethDaiPriceDec.Float64()
+
+			values[symbol] = &tokenValue{
+				tokenUsdValue: edF * tdF,
+				tokenAddress:  addr,
+			}
+		default:
+			// calculate the reserves
+			reserves, err := uc.GetReserves(addr, DAITokenAddress)
+			if err != nil {
+				return 0, errors.Wrap(err, "failed to get reserves for "+symbol)
+			}
+			price := new(big.Int).Div(reserves.Reserve1, reserves.Reserve0)
+
+			priceF, _ := new(big.Float).SetInt(price).Float64()
+			values[symbol] = &tokenValue{
+				tokenUsdValue: priceF,
+				tokenAddress:  addr,
+			}
+		}
+	}
+	var totalValueUSD float64
+	for _, object := range values {
+		erc, err := erc20.NewErc20(object.tokenAddress, c.ec)
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to get erc20 contract")
+		}
+		dec, err := erc.Decimals(nil)
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to get decimals")
+		}
+
+		poolBalance, err := ip.GetBalance(nil, object.tokenAddress)
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to get pool token balance")
+		}
+
+		poolBalanceF, _ := utils.ToDecimal(poolBalance, int(dec)).Float64()
+		poolUSDValue := object.tokenUsdValue * poolBalanceF
+
+		totalValueUSD += poolUSDValue
+
+	}
+
+	return totalValueUSD, nil
 }
