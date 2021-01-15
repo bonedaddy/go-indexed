@@ -57,7 +57,7 @@ func New(opts *Opts) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	db, err := gorm.Open(dialector, &gorm.Config{})
+	db, err := gorm.Open(dialector, &gorm.Config{PrepareStmt: true})
 	if err != nil {
 		return nil, err
 	}
