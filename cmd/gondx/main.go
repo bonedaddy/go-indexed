@@ -16,6 +16,7 @@ import (
 	"github.com/bonedaddy/go-indexed/dashboard"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bonedaddy/go-indexed/discord"
+	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
 )
@@ -436,6 +437,51 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 			} else {
 				if err := db.RecordPrice("ndx", price); err != nil {
 					log.Println("failed to update ndx dai price: ", err)
+				}
+			}
+			// update defi5 total supply
+			ip, err := bc.DEFI5()
+			if err != nil {
+				log.Println("failed to get defi5 contract: ", err)
+			} else {
+				supply, err := ip.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("defi5", supplyF); err != nil {
+						log.Println("failed to update defi5 total supply")
+					}
+				}
+			}
+			// update cc10 total supply
+			ip, err = bc.CC10()
+			if err != nil {
+				log.Println("failed to get cc10 contract: ", err)
+			} else {
+				supply, err := ip.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("cc10", supplyF); err != nil {
+						log.Println("failed to update cc10 total supply")
+					}
+				}
+			}
+			// update ndx total supply
+			erc, err := bc.NDX()
+			if err != nil {
+				log.Println("failed to get ndx contract: ", err)
+			} else {
+				supply, err := erc.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("ndx", supplyF); err != nil {
+						log.Println("failed to update ndx total supply")
+					}
 				}
 			}
 		}
