@@ -67,7 +67,7 @@ func New(opts *Opts) (*Database, error) {
 // AutoMigrate is used to automatically migrate datbase tables
 func (d *Database) AutoMigrate() error {
 	var tables []interface{}
-	tables = append(tables, &Price{}, &TotalValueLocked{})
+	tables = append(tables, &Price{}, &TotalValueLocked{}, &TotalSupply{})
 	for _, table := range tables {
 		if err := d.db.AutoMigrate(table); err != nil {
 			return err
