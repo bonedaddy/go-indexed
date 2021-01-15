@@ -4,13 +4,11 @@ import (
 	"errors"
 	"math"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // Price is a given price entry for an asset
 type Price struct {
-	gorm.Model
+	Model
 	Type     Asset `gorm:"varchar(255)"`
 	USDPrice float64
 }

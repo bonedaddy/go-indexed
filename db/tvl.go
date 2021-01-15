@@ -1,10 +1,8 @@
 package db
 
-import "gorm.io/gorm"
-
 // TotalValueLocked records the USD value of funds locked within index pool
 type TotalValueLocked struct {
-	gorm.Model
+	Model
 	PoolName    string
 	ValueLocked float64
 }

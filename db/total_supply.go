@@ -1,10 +1,8 @@
 package db
 
-import "gorm.io/gorm"
-
 // TotalSupply is used to track the total supply of a given asset
 type TotalSupply struct {
-	gorm.Model
+	Model
 	Type   string
 	Supply float64
 }
