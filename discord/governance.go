@@ -147,19 +147,10 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 }
 
 func (c *Client) governanceTokenTotalSupply(ctx *dgc.Ctx) {
-	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
-		return
-	}
-	ndx, err := c.bc.NDX()
-	if err != nil {
-		ctx.RespondText("failed to get ndx contract binding")
-		return
-	}
-	supply, err := ndx.TotalSupply(nil)
+	supply, err := c.db.LastTotalSupply("ndx")
 	if err != nil {
 		ctx.RespondText("failed to get total supply")
 		return
 	}
-	supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-	ctx.RespondText(printer.Sprintf("ndx token total supply: %0.2f", supplyF))
+	ctx.RespondText(printer.Sprintf("ndx token total supply: %0.2f", supply))
 }
