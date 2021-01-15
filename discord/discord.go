@@ -406,13 +406,13 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 		case "cc10":
 			price, err = database.LastPrice("cc10")
 			if err != nil {
-				log.Println("failed to get defi5 dai price error: ", err)
+				log.Println("failed to get cc10 dai price error: ", err)
 				continue
 			}
 		case "ndx":
 			price, err = database.LastPrice("ndx")
 			if err != nil {
-				log.Println("failed to get defi5 dai price error: ", err)
+				log.Println("failed to get ndx dai price error: ", err)
 				continue
 			}
 		default:
