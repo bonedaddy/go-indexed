@@ -7,7 +7,6 @@ import (
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
-	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/bwmarrin/discordgo"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -76,21 +75,12 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 }
 
 func (c *Client) poolTotalSupply(ctx *dgc.Ctx) {
-	if !ctx.Command.RateLimiter.NotifyExecution(ctx) {
-		return
-	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
-	ip, err := c.getIndexPool(poolName)
+	supply, err := c.db.LastTotalSupply(poolName)
 	if err != nil {
 		ctx.RespondText("invalid pool")
 		return
 	}
-	supply, err := ip.TotalSupply(nil)
-	if err != nil {
-		ctx.RespondText("failed to get total supply")
-		return
-	}
-	supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-	ctx.RespondText(printer.Sprintf("total supply for %s: %0.2f", poolName, supplyF))
+	ctx.RespondText(printer.Sprintf("total supply for %s: %0.2f", poolName, supply))
 }

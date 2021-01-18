@@ -13,8 +13,10 @@ import (
 	"time"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/dashboard"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bonedaddy/go-indexed/discord"
+	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
 )
@@ -82,6 +84,59 @@ func main() {
 		return err
 	}
 	app.Commands = cli.Commands{
+		&cli.Command{
+			Name:  "prometheus",
+			Usage: "serves the prometheus metric endpoint",
+			Action: func(c *cli.Context) error {
+				ctx, cancel := context.WithCancel(c.Context)
+				defer cancel()
+				cfg, err := discord.LoadConfig(c.String("config"))
+				if err != nil {
+					return err
+				}
+				if cfg.InfuraAPIKey != "" {
+					bc, err = bclient.NewInfuraClient(cfg.InfuraAPIKey, cfg.InfuraWSEnabled)
+				} else {
+					bc, err = bclient.NewClient(cfg.ETHRPCEndpoint)
+				}
+				if err != nil {
+					return err
+				}
+				defer bc.Close()
+				database, err := db.New(&db.Opts{
+					Type:           cfg.Database.Type,
+					Host:           cfg.Database.Host,
+					Port:           cfg.Database.Port,
+					User:           cfg.Database.User,
+					Password:       cfg.Database.Pass,
+					DBName:         cfg.Database.DBName,
+					SSLModeDisable: cfg.Database.SSLModeDisable,
+				})
+				if err != nil {
+					return err
+				}
+				defer database.Close()
+				if err := database.AutoMigrate(); err != nil {
+					return err
+				}
+				// serve prometheus metrics
+				go dashboard.ServePrometheusMetrics(ctx, c.String("listen.address"))
+				// update metrics information
+				go dashboard.UpdateMetrics(ctx, database, bc)
+				sc := make(chan os.Signal, 1)
+				signal.Notify(sc, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
+				<-sc
+				cancel()
+				return nil
+			},
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "listen.address",
+					Usage: "the address we will expose the metrics listener on",
+					Value: "0.0.0.0:9123",
+				},
+			},
+		},
 		&cli.Command{
 			Name:  "discord",
 			Usage: "discord bot management",
@@ -275,7 +330,7 @@ func main() {
 }
 
 func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database) {
-	ticker := time.NewTicker(time.Second * 30)
+	ticker := time.NewTicker(time.Second * 60) // update every 1m
 	defer ticker.Stop()
 	// this will tick less frequently as its an extremely expensive RPC to calculate
 	// a single price update likely requires 100 -> 150 RPC calls
@@ -382,6 +437,51 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 			} else {
 				if err := db.RecordPrice("ndx", price); err != nil {
 					log.Println("failed to update ndx dai price: ", err)
+				}
+			}
+			// update defi5 total supply
+			ip, err := bc.DEFI5()
+			if err != nil {
+				log.Println("failed to get defi5 contract: ", err)
+			} else {
+				supply, err := ip.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("defi5", supplyF); err != nil {
+						log.Println("failed to update defi5 total supply")
+					}
+				}
+			}
+			// update cc10 total supply
+			ip, err = bc.CC10()
+			if err != nil {
+				log.Println("failed to get cc10 contract: ", err)
+			} else {
+				supply, err := ip.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("cc10", supplyF); err != nil {
+						log.Println("failed to update cc10 total supply")
+					}
+				}
+			}
+			// update ndx total supply
+			erc, err := bc.NDX()
+			if err != nil {
+				log.Println("failed to get ndx contract: ", err)
+			} else {
+				supply, err := erc.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("ndx", supplyF); err != nil {
+						log.Println("failed to update ndx total supply")
+					}
 				}
 			}
 		}

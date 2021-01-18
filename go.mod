@@ -7,6 +7,7 @@ require (
 	github.com/bwmarrin/discordgo v0.22.1-0.20201217190221-8d6815dde7ed
 	github.com/ethereum/go-ethereum v1.9.25
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v0.9.1
 	github.com/shopspring/decimal v1.2.0
 	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli/v2 v2.3.0

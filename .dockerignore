@@ -15,3 +15,5 @@ config.yml
 ./gondx
 ./indexed.db
 .scripts
+grafana
+prom_data

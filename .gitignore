@@ -10,3 +10,5 @@ release/
 *.db
 
 db_backups/
+
+prom_data/
