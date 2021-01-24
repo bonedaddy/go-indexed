@@ -63,15 +63,32 @@ func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
 
 func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 	arguments := ctx.Arguments
-	poolName := arguments.Get(0).Raw()
-
-	tvl, err := c.db.LastValueLocked(strings.ToLower(poolName))
-	if err != nil {
-		log.Println("failed to get total value locked: ", err)
-		ctx.RespondText("failed to get total value locked")
-		return
+	if arguments.Amount() == 0 {
+		// get tvl across all pools
+		var (
+			totalLocked float64
+			pools       = []string{"defi5", "cc10"}
+		)
+		for _, pool := range pools {
+			tvl, err := c.db.LastValueLocked(strings.ToLower(pool))
+			if err != nil {
+				log.Println("failed to get total value locked: ", err)
+				ctx.RespondText("failed to get total value locked")
+				return
+			}
+			totalLocked += tvl
+		}
+		ctx.RespondText(printer.Sprintf("total value locked across all pools: $%0.2f", totalLocked))
+	} else {
+		poolName := arguments.Get(0).Raw()
+		tvl, err := c.db.LastValueLocked(strings.ToLower(poolName))
+		if err != nil {
+			log.Println("failed to get total value locked: ", err)
+			ctx.RespondText("failed to get total value locked")
+			return
+		}
+		ctx.RespondText(printer.Sprintf("total value locked for %s: $%0.2f", poolName, tvl))
 	}
-	ctx.RespondText(printer.Sprintf("total value locked for %s: $%0.2f", poolName, tvl))
 }
 
 func (c *Client) poolTotalSupply(ctx *dgc.Ctx) {

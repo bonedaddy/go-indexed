@@ -140,9 +140,9 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 			&dgc.Command{
 				Name:        "total-value-locked",
 				Aliases:     []string{"tvl"},
-				Description: "returns the total value locked within a pool in terms of USD. tvl is updated once per hour",
+				Description: "returns the total value locked within a pool in terms of USD. tvl is updated once per hour, providing no <pool-name> parameter returns total value locked across all pools",
 				Usage:       " pool total-value-locked <pool-name>",
-				Example:     " pool total-value-locked defi5",
+				Example:     " pool total-value-locked defi5\n!ndx pool total-value-locked",
 				IgnoreCase:  true,
 				Handler:     client.poolTotalValueLocked,
 			},
