@@ -1,77 +1,65 @@
 # go-indexed
 
 
-`go-indexed` is an SDK for interacting [Indexed Finance](https://indexed.finance) smart contracts using the Golang programming language. It includes a library that leverages the Ethereum RPC client, a CLI for querying the smart contracts from the CLI, and a Discord bot that essentially provides a CLI/Library like usage experience through the Discord platform.
+`go-indexed` is a Golang SDK for interacting with [Indexed Finance](https://indexed.finance) smart contracts. The main purpose of go-indexed is to facilitate the development of NDXBot which is a Discord bot designed to allow performing read-only queries to these smart contracts.
 
-# Overview
 
-## Discord
+# Packages
 
-A Discord chat bot is included that allows for making read-only calls to Indexed Finance contracts Discord message. It has the current capabilities
+The library is broken down into a number of different packages:
 
-* Return account balance for IndexPools contracts
-* Return account staking balance and stake rewards earned for the staking contracts
-* Return current tokens basketed into an IndexPool
-* Notify about arbitrary conditions:
-  * Currently only supports stake earned
-
-## CLI
-
-There is a basic CLI that can be used to make simple queries about the smart contracts.
-
-## Library
-
-TODO
-
+* `bclient`
+  * Wrapper around the Go-Ethereum `ethclient` package that includes helper functions for talking with Indexed contracts.
+* `bindings`
+  * Stores all generated code from `abigen`
+* `db`
+  * Small database package primarily designed for storing the value of various IndexedPool assets in terms of DAI
+* `discord`
+  * Provides the Discord bot functionality
+* `uniswap`
+  * uniswap contract wrappers, essentially the `bclient` equivalent but for Uniswap V2 contracts
+  * largely copy & pasted from [mysterium/payments](https://github.com/mysteriumnetwork/payments)
+* `utils`
+  * Utility functions from [goethereumbook](goethereumbook.org/)
 # Installation
+
+Requires you have a valid Go 1.15+ installation, as well as Docker Compose installed locally
 
 ```Shell
 $> git clone https://github.com/bonedaddy/go-indexed
 $> cd go-indexed
 $> go mod download
-$> make # builds the CLI and creates an executable in the current directory named gondx
+$> make release # builds the docker image and CLI 
 ```
 
 # Usage
 
-## CLI
+## Library
 
-At the moment the only CLI command available is `gondx pool` please see its output for more information.
+At the moment there is no documentation for using go-indexed as a library, only tests. Please look at all `_test.go` files in the following directories to get a better understanding of how the library functions:
 
-## Discord
+* bclient
+* uniswap
 
-First you'll need to create a Discord bot user that will be used, and get an appropriate access token. The following instructions star the Discord bot conencted to infura
+## Discord 
 
-```shell
-$> ./gondx --infura.api_key supersecretinfurakey discord-bot --discord.token "supersecretdiscordtoken"
-```
-
-To view the general help menu send the following message from a channel the bot can read from and send messages to:
-```
-!ndx
-```
-
-To view help menu about the notify command:
-```
-!ndx notify help
-```
+There are a large number of available commands, and subcommands. For documentation on on that [please click here](./docs/DISCORD_BOT.md). Alternatively if you are on Discord simply open up a chat the bot is listening on and run `!ndx help`.
 
 # Development
 
-To update the ABIs from the `indexed-js` submodule: `make copy-abi`
+## ABI Changes
 
-To update the generated golang code for the ABIs: `make gen-bindings`
+If you are doing something that requires ABI changes, you will want to make sure that all submodules are correctly updated, they are:
 
-Note: Updating the uniswap bindings is a bit tedious because of the usage of waffle which outputs a combined json file that isnt properly generating the golang bindings so you must manually copy the ABI from the combined json output into its own file
+ * indexed-core
+ * indexed-governance
+ * indexed-js
+ * indexed-uv2oracle
+ * uniswap-v2-core
 
-## Contract Bindings
+After ensuring the submodules are updated, you will need to copy ABIs from `indexed-js` with `make copy-abi`. After that you can genrate all other bindings (except the uniswap ones) with `make gen-bindings`.
 
-#  bindings/uniswapv2_oracle
-
-These are the contract bindings for the Indexed UniswapV2 Oracle
-
-# bindings/uniswapv2
-
+Updating the uniswap bindings is a bit tedious because of the usage of waffle which outputs a combined json file that isnt properly generating the golang bindings so you must manually copy the ABI from the combined json output into its own file
 These are contract bindings for uniswapv2 itself
 
 # Support
