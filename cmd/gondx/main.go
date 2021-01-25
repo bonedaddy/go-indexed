@@ -273,7 +273,7 @@ func main() {
 						&cli.BoolFlag{
 							Name:  "update.database",
 							Usage: "if true launch the db price update routine. if false make sure chain-updater command is running",
-							Value: true,
+							Value: false,
 						},
 					},
 				},
