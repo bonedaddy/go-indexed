@@ -57,9 +57,6 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 		cancel()
 		return nil, err
 	}
-	if err := dg.UpdateListeningStatus("!ndx help"); err != nil {
-		log.Println("failed to udpate streaming status: ", err)
-	}
 
 	// updates the main bot's nickname to reflect ndx price
 	ndxPriceWatchRoutine(ctx, dg, wg, db)
@@ -299,9 +296,11 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 					log.Println("failed to get user guilds error: ", err)
 					continue
 				}
-				update := fmt.Sprintf("NDXBot: $%0.2f | $%s TVL", price, ParseValue(defi5TVL+cc10TVL))
+				update := fmt.Sprintf("NDXBot: $%0.2f", price)
+				parsed := ParseValue(defi5TVL + cc10TVL)
 				for _, guild := range guilds {
 					bot.GuildMemberNickname(guild.ID, "@me", update)
+					bot.UpdateStatus(0, parsed+" TVL")
 				}
 			}
 		}
@@ -318,8 +317,6 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			log.Printf("failed to launch watcher bot %s: %s", watcher.Currency, err)
 			continue
 		}
-		// set playing status
-		//watcherBot.UpdateStatus(0, "indexed.finance")
 		switch strings.ToLower(watcher.Currency) {
 		case "cc10-defi", "defi5-cc10":
 			wg.Add(1)
