@@ -66,8 +66,7 @@ Note: Updating the uniswap bindings is a bit tedious because of the usage of waf
 
 ## Adding New TVL Tracking
 
-There are two ways to calculate the USD value of assets in indices. One if by looking up their DAI uniswap pairs, the other is by looking up their ETH uniswap pairs and converting that to DAI. DAI uniswap pairs are preferrable as it reduces the amoutn of RPCs and time to calculate TVL however not all pairs have sufficient liquidity, and some pairs may not even have liquidity so you must lookup the pair on uniswap first to make sure that the liquidity is present. Otherwise you update `bclient/pool.go` to specify the alternate path (X -> ETH -> DAI) as the default behavior is X -> DAI.
-
+The default behavior for TVL calculation is to derive the price of assets by looking up their ETH uniswap pairs, and converting that to DAI. So for AAVE the USD price determination process is `AAVE -> ETH -> DAI`
 ## Contract Bindings
 
 #  bindings/uniswapv2_oracle
