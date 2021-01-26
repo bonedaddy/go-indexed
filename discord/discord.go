@@ -57,9 +57,6 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 		cancel()
 		return nil, err
 	}
-	if err := dg.UpdateListeningStatus("!ndx help"); err != nil {
-		log.Println("failed to udpate streaming status: ", err)
-	}
 
 	// updates the main bot's nickname to reflect ndx price
 	ndxPriceWatchRoutine(ctx, dg, wg, db)
@@ -279,6 +276,16 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
+				defi5TVL, err := db.LastValueLocked("defi5")
+				if err != nil {
+					log.Println("failed to get defi5 tvl: ", err)
+					continue
+				}
+				cc10TVL, err := db.LastValueLocked("cc10")
+				if err != nil {
+					log.Println("failed to get cc10 tvl: ", err)
+					continue
+				}
 				price, err := db.LastPrice("ndx")
 				if err != nil {
 					log.Println("failed to get last ndx price: ", err)
@@ -289,8 +296,11 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 					log.Println("failed to get user guilds error: ", err)
 					continue
 				}
+				update := fmt.Sprintf("NDXBot: $%0.2f", price)
+				parsed := ParseValue(defi5TVL + cc10TVL)
 				for _, guild := range guilds {
-					bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("NDXBot: $%0.2f", price))
+					bot.GuildMemberNickname(guild.ID, "@me", update)
+					bot.UpdateStatus(0, parsed+" TVL")
 				}
 			}
 		}
@@ -307,8 +317,6 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			log.Printf("failed to launch watcher bot %s: %s", watcher.Currency, err)
 			continue
 		}
-		// set playing status
-		watcherBot.UpdateStatus(0, "indexed.finance")
 		switch strings.ToLower(watcher.Currency) {
 		case "cc10-defi", "defi5-cc10":
 			wg.Add(1)
@@ -343,17 +351,24 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 		}
 		var (
 			price float64
+			tvl   float64
 			err   error
 		)
 		switch strings.ToLower(name) {
 		case "cc10-defi5", "defi5-cc10": // handle combo cc10 and defi5 price tracker
-			var defi5DaiPrice, cc10DaiPrice float64
+			var defi5DaiPrice, cc10DaiPrice, defi5TVL, cc10TVL float64
 
 			price, err = database.LastPrice("defi5")
 			if err != nil {
 				log.Println("failed to get defi5 dai price: ", err)
 				continue
 			}
+			tvl, err = database.LastValueLocked("defi5")
+			if err != nil {
+				log.Println("failed to get defi5 tvl")
+				continue
+			}
+			defi5TVL = tvl
 			defi5DaiPrice = price
 
 			price, err = database.LastPrice("cc10")
@@ -361,6 +376,12 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 				log.Println("failed to get cc10 dai price: ", err)
 				continue
 			}
+			tvl, err = database.LastValueLocked("cc10")
+			if err != nil {
+				log.Println("failed to get cc10 tvl")
+				continue
+			}
+			cc10TVL = tvl
 			cc10DaiPrice = price
 
 			guilds, err := bot.UserGuilds(0, "", "")
@@ -368,13 +389,23 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 				log.Println("failed to get user guilds error: ", err)
 				continue
 			}
+
+			output := fmt.Sprintf("DEFI5: $%0.2f", defi5DaiPrice)
+			parsed := ParseValue(defi5TVL)
 			for _, guild := range guilds {
-				bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("DEFI5: $%0.2f", defi5DaiPrice))
+				bot.GuildMemberNickname(guild.ID, "@me", output)
+				bot.UpdateStatus(0, parsed+" TVL")
 			}
+
 			time.Sleep(time.Second * 10) // wait 10 seconds before displaying new price
+
+			output = fmt.Sprintf("CC10: $%0.2f", cc10DaiPrice)
+			parsed = ParseValue(cc10TVL)
 			for _, guild := range guilds {
-				bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("CC10: $%0.2f", cc10DaiPrice))
+				bot.GuildMemberNickname(guild.ID, "@me", output)
+				bot.UpdateStatus(0, parsed+" TVL")
 			}
+
 			time.Sleep(time.Second * 10) // wait 10 seconds before looping again
 		default:
 			return errors.New("unsupported name: " + name)
@@ -394,6 +425,7 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 		}
 		var (
 			price float64
+			tvl   float64
 			err   error
 		)
 		switch strings.ToLower(name) {
@@ -403,10 +435,20 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 				log.Println("failed to get defi5 dai price error: ", err)
 				continue
 			}
+			tvl, err = database.LastValueLocked("defi5")
+			if err != nil {
+				log.Println("failed to get defi5 tvl: ", err)
+				continue
+			}
 		case "cc10":
 			price, err = database.LastPrice("cc10")
 			if err != nil {
 				log.Println("failed to get cc10 dai price error: ", err)
+				continue
+			}
+			tvl, err = database.LastValueLocked("cc10")
+			if err != nil {
+				log.Println("failed to get cc10 tvl: ", err)
 				continue
 			}
 		case "ndx":
@@ -423,8 +465,11 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 			log.Println("failed to get user guilds error: ", err)
 			continue
 		}
+		output := printer.Sprintf("%s: $0.2f", name, price)
+		parsed := ParseValue(tvl)
 		for _, guild := range guilds {
-			bot.GuildMemberNickname(guild.ID, "@me", fmt.Sprintf("%s: $%0.2f", name, price))
+			bot.GuildMemberNickname(guild.ID, "@me", output)
+			bot.UpdateStatus(0, parsed+" TVL")
 		}
 	}
 }

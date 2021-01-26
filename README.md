@@ -64,6 +64,9 @@ To update the generated golang code for the ABIs: `make gen-bindings`
 
 Note: Updating the uniswap bindings is a bit tedious because of the usage of waffle which outputs a combined json file that isnt properly generating the golang bindings so you must manually copy the ABI from the combined json output into its own file
 
+## Adding New TVL Tracking
+
+The default behavior for TVL calculation is to derive the price of assets by looking up their ETH uniswap pairs, and converting that to DAI. So for AAVE the USD price determination process is `AAVE -> ETH -> DAI`
 ## Contract Bindings
 
 #  bindings/uniswapv2_oracle

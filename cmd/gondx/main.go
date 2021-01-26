@@ -273,7 +273,7 @@ func main() {
 						&cli.BoolFlag{
 							Name:  "update.database",
 							Usage: "if true launch the db price update routine. if false make sure chain-updater command is running",
-							Value: true,
+							Value: false,
 						},
 					},
 				},
@@ -332,9 +332,8 @@ func main() {
 func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database) {
 	ticker := time.NewTicker(time.Second * 60) // update every 1m
 	defer ticker.Stop()
-	// this will tick less frequently as its an extremely expensive RPC to calculate
-	// a single price update likely requires 100 -> 150 RPC calls
-	tvlTicker := time.NewTicker(time.Hour)
+	// update TVL every 15 minutes
+	tvlTicker := time.NewTicker(time.Minute * 15)
 	defer tvlTicker.Stop()
 
 	// update the tvl price before looping to insert some data

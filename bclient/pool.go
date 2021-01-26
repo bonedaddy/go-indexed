@@ -1,6 +1,7 @@
 package bclient
 
 import (
+	"log"
 	"math/big"
 	"strings"
 
@@ -70,7 +71,7 @@ func (c *Client) GetTotalValueLocked(ip IndexPool) (float64, error) {
 	for symbol, addr := range tokens {
 		// hard coded list for alternate price lookups of X->ETH->DAI
 		switch strings.ToLower(symbol) {
-		case "crv", "uma", "omg", "yfi":
+		default:
 			erc, err := erc20.NewErc20(addr, c.ec)
 			if err != nil {
 				return 0, errors.Wrap(err, "failed to get erc20 contract")
@@ -101,19 +102,7 @@ func (c *Client) GetTotalValueLocked(ip IndexPool) (float64, error) {
 				tokenUsdValue: edF * tdF,
 				tokenAddress:  addr,
 			}
-		default:
-			// calculate the reserves
-			reserves, err := uc.GetReserves(addr, DAITokenAddress)
-			if err != nil {
-				return 0, errors.Wrap(err, "failed to get reserves for "+symbol)
-			}
-			price := new(big.Int).Div(reserves.Reserve1, reserves.Reserve0)
-
-			priceF, _ := new(big.Float).SetInt(price).Float64()
-			values[symbol] = &tokenValue{
-				tokenUsdValue: priceF,
-				tokenAddress:  addr,
-			}
+			log.Printf("%s USD value: %0.2f", symbol, values[symbol].tokenUsdValue)
 		}
 	}
 	var totalValueUSD float64
