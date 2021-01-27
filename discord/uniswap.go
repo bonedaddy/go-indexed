@@ -3,6 +3,7 @@ package discord
 import (
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 
@@ -104,7 +105,13 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			log.Println("defi5 dai price change fetch failed: ", err)
 			return
 		}
-		ctx.RespondText(fmt.Sprintf("DEFI5-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		var changed string
+		if (price * 100) < 0 {
+			changed = "decreased"
+		} else {
+			changed = "increased"
+		}
+		ctx.RespondText(fmt.Sprintf("DEFI5-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
 		return
 	case "cc10-dai":
 		price, err := c.db.PriceChangeInRange("cc10", window)
@@ -113,7 +120,13 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			log.Println("cc10 dai price change fetch failed: ", err)
 			return
 		}
-		ctx.RespondText(fmt.Sprintf("CC10-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		var changed string
+		if (price * 100) < 0 {
+			changed = "decreased"
+		} else {
+			changed = "increased"
+		}
+		ctx.RespondText(fmt.Sprintf("CC10-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
 		return
 	case "eth-dai":
 		price, err := c.db.PriceChangeInRange("eth", window)
@@ -122,7 +135,13 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			log.Println("cc10 dai price change failed: ", err)
 			return
 		}
-		ctx.RespondText(fmt.Sprintf("ETH-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		var changed string
+		if (price * 100) < 0 {
+			changed = "decreased"
+		} else {
+			changed = "increased"
+		}
+		ctx.RespondText(fmt.Sprintf("ETH-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
 		return
 	case "ndx-dai":
 		price, err := c.db.PriceChangeInRange("ndx", window)
@@ -131,7 +150,13 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			log.Println("ndx dai price change failed: ", err)
 			return
 		}
-		ctx.RespondText(fmt.Sprintf("NDX-DAI price has changed %0.2f%% over the last %v days", price*100, window))
+		var changed string
+		if (price * 100) < 0 {
+			changed = "decreased"
+		} else {
+			changed = "increased"
+		}
+		ctx.RespondText(fmt.Sprintf("NDX-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
 	default:
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
 		return
