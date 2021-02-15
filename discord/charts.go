@@ -2,7 +2,6 @@ package discord
 
 import (
 	"bytes"
-	"log"
 	"strings"
 
 	"github.com/bonedaddy/dgc"
@@ -141,13 +140,13 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 
 	buffer := bytes.NewBuffer(nil)
 	if err := graph.Render(chart.PNG, buffer); err != nil {
-		log.Println("failed to render SMA: ", err)
+		c.logger.Error("failed to render sma", zap.Error(err))
 		ctx.RespondText("failed to render SMA")
 		return
 	}
 
 	if _, err := ctx.Session.ChannelFileSend(ctx.Event.ChannelID, "chart.png", buffer); err != nil {
-		log.Println("failed to upload chart: ", err)
+		c.logger.Error("failed to upload chart", zap.Error(err))
 		ctx.RespondText("failed to upload chart")
 		return
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -257,8 +256,7 @@ func NewClient(ctx context.Context, cfg *config.Config, bc *bclient.Client, db *
 		},
 	})
 	router.Initialize(dg)
-
-	log.Println("bot is now running")
+	logger.Info("bot started")
 	return client, nil
 }
 
