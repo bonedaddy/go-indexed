@@ -24,7 +24,7 @@ func (c *Client) stakeEarnedHandler(ctx *dgc.Ctx) {
 		ctx.RespondText("invalid stake-type")
 		return
 	}
-	ip, err := c.getIndexPool(poolType)
+	ip, err := c.bc.GetIndexPool(poolType)
 	if err != nil {
 		ctx.RespondText("failed to lookup index pool")
 		return

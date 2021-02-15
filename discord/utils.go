@@ -5,23 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bonedaddy/go-indexed/bclient"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
 	"github.com/bwmarrin/discordgo"
 )
-
-func (c *Client) getIndexPool(name string) (bclient.IndexPool, error) {
-	switch name {
-	case "defi5":
-		return c.bc.DEFI5()
-	case "cc10":
-		return c.bc.CC10()
-	case "orcl5":
-		return c.bc.ORCL5()
-	default:
-		return nil, errors.New("invalid pool name")
-	}
-}
 
 func (c *Client) getStakingRewards(name string) (*stakingbindings.Stakingbindings, error) {
 	switch name {

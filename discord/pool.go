@@ -18,7 +18,7 @@ func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
 	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
-	ip, err := c.getIndexPool(poolName)
+	ip, err := c.bc.GetIndexPool(poolName)
 	if err != nil {
 		ctx.RespondText("invalid pool")
 		return
@@ -47,7 +47,7 @@ func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
 	accountAddr := arguments.Get(1).Raw()
-	ip, err := c.getIndexPool(poolName)
+	ip, err := c.bc.GetIndexPool(poolName)
 	if err != nil {
 		ctx.RespondText("invalid pool")
 		return
