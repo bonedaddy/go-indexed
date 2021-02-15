@@ -13,9 +13,17 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// ERC20I denotes ERC20 interface functions
+type ERCO20I interface {
+	BalanceOf(opts *bind.CallOpts, whom common.Address) (*big.Int, error)
+	Decimals(opts *bind.CallOpts) (uint8, error)
+	TotalSupply(opts *bind.CallOpts) (*big.Int, error)
+}
+
 // IndexPoolRead are read-only IndexPool contract calls
 // See https://docs.indexed.finance/indexed-finance-docs/smart-contracts/pool#indexpool for more information
 type IndexPoolRead interface {
+	ERCO20I
 	IsPublicSwap(opts *bind.CallOpts) (bool, error)
 	GetController(opts *bind.CallOpts) (common.Address, error)
 	GetCurrentTokens(opts *bind.CallOpts) ([]common.Address, error)
@@ -29,9 +37,6 @@ type IndexPoolRead interface {
 	GetUsedBalance(opts *bind.CallOpts, token common.Address) (*big.Int, error)
 	GetBalance(opts *bind.CallOpts, token common.Address) (*big.Int, error)
 	ExtrapolatePoolValueFromToken(opts *bind.CallOpts) (common.Address, *big.Int, error)
-	BalanceOf(opts *bind.CallOpts, whom common.Address) (*big.Int, error)
-	Decimals(opts *bind.CallOpts) (uint8, error)
-	TotalSupply(opts *bind.CallOpts) (*big.Int, error)
 }
 
 // IndexPool provides helper functions around the IndexPool contract
