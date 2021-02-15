@@ -82,6 +82,25 @@ func (c *Client) Defi5DaiPrice() (float64, error) {
 	return edF * deF, nil
 }
 
+// Orcl5DaiPrice returns the price of ORCL5 in terms of DAI
+func (c *Client) Orcl5DaiPrice() (float64, error) {
+	orcl5EthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "orcl5-eth")
+	if err != nil {
+		return 0, err
+	}
+	orcl5EthPriceDec := utils.ToDecimal(orcl5EthPrice, 18)
+	ethDaiPrice, err := c.EthDaiPrice()
+	if err != nil {
+		return 0, err
+	}
+	ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+	// derive the price of ORCL5 by getting the amount of ETH you would get from
+	// 1 DEFI5 token, and converting that into DAI
+	edF, _ := ethDaiPriceDec.Float64()
+	oeF, _ := orcl5EthPriceDec.Float64()
+	return edF * oeF, nil
+}
+
 // EthDaiPrice returns the price of ETH in terms of DAI
 func (c *Client) EthDaiPrice() (*big.Int, error) {
 	reserves, err := c.Reserves("eth-dai")
@@ -128,6 +147,10 @@ func (c *Client) ExchangeAmount(amount *big.Int, pair string) (*big.Int, error) 
 		return c.uc.GetExchangeAmount(amount, DEFI5TokenAddress, WETHTokenAddress)
 	case "eth-defi5":
 		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, DEFI5TokenAddress)
+	case "orcl5-eth":
+		return c.uc.GetExchangeAmount(amount, ORCL5TokenAddress, WETHTokenAddress)
+	case "eth-orcl5":
+		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, ORCL5TokenAddress)
 	default:
 		return nil, errors.New("unsupported pair")
 	}
@@ -147,6 +170,10 @@ func (c *Client) PairDecimals(pair string) int {
 	case "defi5-eth":
 		return 18
 	case "eth-defi5":
+		return 18
+	case "orcl5-eth":
+		return 18
+	case "eth-orcl5":
 		return 18
 	default:
 		return 0

@@ -64,6 +64,11 @@ func (c *Client) CC10() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(CC10TokenAddress, c.ec)
 }
 
+// ORCL5 returns a ORCL5 contract binding
+func (c *Client) ORCL5() (IndexPool, error) {
+	return poolbindings.NewPoolbindings(ORCL5TokenAddress, c.ec)
+}
+
 // MCAPControllerAt returns the marketcap square root controller bindings for an IndexPool
 func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontroller, error) {
 	cntrl, err := ip.GetController(nil)

@@ -5,6 +5,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// to compute addresses for contracts go to https://etherscan.io/address/0xf00a38376c8668fc1f3cd3daeef42e0e44a7fcdb#readProxyContract
+
 var (
 	defi5Addr      = "0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41"
 	defi5StakeAddr = "0x11bf850D1B85eA02eF9F06Cf09488E443655b586"
@@ -14,6 +16,7 @@ var (
 	cc10UNILPStakeAddr = "0x08F0d214d6A80520F18E6837e2cc40899E67B5c0"
 	cc10Addr           = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
 	cc10StakeAddr      = "0xE1dE5Ebd607f1Da1c34D78b760B9C87901d0Ba35"
+	orcl5Addr          = "0xD6cb2aDF47655B1bABdDc214d79257348CBC39A7"
 	// DEFI5TokenAddress is the address of the DEFI5 token/pool contract
 	DEFI5TokenAddress = common.HexToAddress(defi5Addr)
 	// DEFI5StakingAddress is the address of the DEFI5 staking contract
@@ -26,6 +29,8 @@ var (
 	CC10UNILPStakingAddress = common.HexToAddress(cc10UNILPStakeAddr)
 	// CC10TokenAddress is the address of the CC10 token/pool contract
 	CC10TokenAddress = common.HexToAddress(cc10Addr)
+	// ORCL5TokenAddress is the address of the ORCL5 token/pool contract
+	ORCL5TokenAddress = common.HexToAddress(orcl5Addr)
 	// WETHTokenAddress is the address of the WETH token contract
 	WETHTokenAddress = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 	// DAITokenAddress is the address of the MCD (Multi Collateral DAI) contract
