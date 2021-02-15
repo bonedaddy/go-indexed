@@ -12,6 +12,8 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/wcharczuk/go-chart/v2 v2.1.0
+	go.bobheadxi.dev/zapx/zapx v0.6.8
+	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/text v0.3.3

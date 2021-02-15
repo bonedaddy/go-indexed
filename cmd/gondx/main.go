@@ -13,12 +13,14 @@ import (
 	"time"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/config"
 	"github.com/bonedaddy/go-indexed/dashboard"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bonedaddy/go-indexed/discord"
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 )
 
 var (
@@ -77,7 +79,7 @@ func main() {
 			Action: func(c *cli.Context) error {
 				ctx, cancel := context.WithCancel(c.Context)
 				defer cancel()
-				cfg, err := discord.LoadConfig(c.String("config"))
+				cfg, err := config.LoadConfig(c.String("config"))
 				if err != nil {
 					return err
 				}
@@ -140,7 +142,11 @@ func main() {
 							Action: func(c *cli.Context) error {
 								ctx, cancel := context.WithCancel(c.Context)
 								defer cancel()
-								cfg, err := discord.LoadConfig(c.String("config"))
+								cfg, err := config.LoadConfig(c.String("config"))
+								if err != nil {
+									return err
+								}
+								logger, err := config.LoggerFromConfig(cfg)
 								if err != nil {
 									return err
 								}
@@ -171,10 +177,12 @@ func main() {
 								}
 								wg := &sync.WaitGroup{}
 								wg.Add(1)
+								// do an initial seed
+								processUpdates(bc, database, logger, cfg.Indices)
 								// launch database price updater loop
 								go func() {
 									defer wg.Done()
-									dbPriceUpdateLoop(ctx, bc, database)
+									dbPriceUpdateLoop(ctx, bc, database, logger, cfg)
 								}()
 
 								sc := make(chan os.Signal, 1)
@@ -191,7 +199,7 @@ func main() {
 					Name:  "gen-config",
 					Usage: "generate ndx bot config file",
 					Action: func(c *cli.Context) error {
-						return discord.NewConfig(c.String("config"))
+						return config.NewConfig(c.String("config"))
 					},
 				},
 				&cli.Command{
@@ -200,7 +208,11 @@ func main() {
 					Action: func(c *cli.Context) error {
 						ctx, cancel := context.WithCancel(c.Context)
 						defer cancel()
-						cfg, err := discord.LoadConfig(c.String("config"))
+						cfg, err := config.LoadConfig(c.String("config"))
+						if err != nil {
+							return err
+						}
+						logger, err := config.LoggerFromConfig(cfg)
 						if err != nil {
 							return err
 						}
@@ -232,15 +244,17 @@ func main() {
 						}
 						wg := &sync.WaitGroup{}
 						if c.Bool("update.database") {
+							// do an initial seed
+							processUpdates(bc, database, logger, cfg.Indices)
 							wg.Add(1)
 							// launch database price updater loop
 							go func() {
 								defer wg.Done()
-								dbPriceUpdateLoop(ctx, bc, database)
+								dbPriceUpdateLoop(ctx, bc, database, logger, cfg)
 							}()
 						}
 
-						client, err := discord.NewClient(ctx, cfg, bc, database)
+						client, err := discord.NewClient(ctx, cfg, bc, database, logger)
 						if err != nil {
 							return err
 						}
@@ -316,58 +330,22 @@ func main() {
 	}
 }
 
-func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database) {
+func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database, logger *zap.Logger, cfg *config.Config) {
 	ticker := time.NewTicker(time.Second * 60) // update every 1m
 	defer ticker.Stop()
 	// update TVL every 15 minutes
 	tvlTicker := time.NewTicker(time.Minute * 15)
 	defer tvlTicker.Stop()
 
-	indices := []string{"defi5", "cc10", "orcl5"}
-	handleIndexUpdates(db, bc, indices)
+	// do an initial update
+	processUpdates(bc, db, logger, cfg.Indices)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			handleIndexUpdates(db, bc, indices)
-			// handle misc updates
-
-			// update eth price
-			priceBig, err := bc.EthDaiPrice()
-			if err != nil {
-				log.Println("failed to get eth dai price: ", err)
-			} else {
-				if err := db.RecordPrice("eth", float64(priceBig.Int64())); err != nil {
-					log.Println("failed to update eth dai price: ", err)
-				}
-			}
-			// update ndx price
-			price, err := bc.NdxDaiPrice()
-			if err != nil {
-				log.Println("failed to get ndx dai price: ", err)
-			} else {
-				if err := db.RecordPrice("ndx", price); err != nil {
-					log.Println("failed to update ndx dai price: ", err)
-				}
-			}
-			// update ndx total supply
-			erc, err := bc.NDX()
-			if err != nil {
-				log.Println("failed to get ndx contract: ", err)
-			} else {
-				supply, err := erc.TotalSupply(nil)
-				if err != nil {
-					log.Println("failed to get total supply: ", err)
-				} else {
-					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-					if err := db.RecordTotalSupply("ndx", supplyF); err != nil {
-						log.Println("failed to update ndx total supply")
-					}
-				}
-			}
-
+			processUpdates(bc, db, logger, cfg.Indices)
 		}
 	}
 
@@ -375,27 +353,27 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 
 // handleIndexUpdates is responsible for handling updates of indice
 // tvl, total supply, and price
-func handleIndexUpdates(db *db.Database, bc *bclient.Client, indices []string) {
+func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger, indices []string) {
 	for _, indice := range indices {
 		curr := strings.ToLower(indice)
 		ip, err := bc.GetIndexPool(curr)
 		if err != nil {
 			break
 		}
-		supply, price, tvl, err := getValues(bc, ip, curr)
+		supply, price, tvl, err := getValues(bc, ip, logger, curr)
 		if err := db.RecordValueLocked(curr, tvl); err != nil {
-			log.Println("failed to record value locked: ", err, indice)
+			logger.Error("failed to record value locked", zap.Error(err), zap.String("indice", indice))
 		}
 		if err := db.RecordPrice(curr, price); err != nil {
-			log.Println("failed to record price: ", err, indice)
+			logger.Error("failed to record price", zap.Error(err), zap.String("indice", indice))
 		}
 		if err := db.RecordTotalSupply(curr, supply); err != nil {
-			log.Println("failed to record total supply: ", err, indice)
+			logger.Error("failed to record total supply", zap.Error(err), zap.String("indice", indice))
 		}
 	}
 }
 
-func getValues(bc *bclient.Client, ip bclient.IndexPool, name string) (totalSupply, price, tvl float64, err error) {
+func getValues(bc *bclient.Client, ip bclient.IndexPool, logger *zap.Logger, name string) (totalSupply, price, tvl float64, err error) {
 	totalSupply, err = getTotalSupply(ip)
 	switch name {
 	case "defi5":
@@ -405,7 +383,7 @@ func getValues(bc *bclient.Client, ip bclient.IndexPool, name string) (totalSupp
 	case "orcl5":
 		price, err = bc.Orcl5DaiPrice()
 	}
-	tvl, err = bc.GetTotalValueLocked(ip)
+	tvl, err = bc.GetTotalValueLocked(ip, logger)
 	return
 }
 
@@ -416,4 +394,44 @@ func getTotalSupply(erc bclient.ERCO20I) (float64, error) {
 	}
 	totalSupplyF, _ := utils.ToDecimal(totalSupplyBig, 18).Float64()
 	return totalSupplyF, nil
+}
+
+func processUpdates(bc *bclient.Client, db *db.Database, logger *zap.Logger, indices []string) {
+	// do an initial update
+	handleIndexUpdates(db, bc, logger, indices)
+	// update eth price seperately as it requires special handling
+	priceBig, err := bc.EthDaiPrice()
+	if err != nil {
+		logger.Error("failed to get eth dai price", zap.Error(err))
+	} else {
+		if err := db.RecordPrice("eth", float64(priceBig.Int64())); err != nil {
+			logger.Error("failed to update eth dai price", zap.Error(err))
+		}
+	}
+	// update ndx price seperately as it requires special handling
+	price, err := bc.NdxDaiPrice()
+	if err != nil {
+		logger.Error("failed to get ndx dai price", zap.Error(err))
+	} else {
+		if err := db.RecordPrice("ndx", price); err != nil {
+			logger.Error("failed to udpate ndx dai price", zap.Error(err))
+		}
+	}
+
+	// update ndx total supply seperately as it requires special handling
+	erc, err := bc.NDX()
+	if err != nil {
+		logger.Error("failed to get ndx contract", zap.Error(err))
+	} else {
+		supply, err := erc.TotalSupply(nil)
+		if err != nil {
+			logger.Error("failed to get total supply", zap.Error(err))
+		} else {
+			supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+			if err := db.RecordTotalSupply("ndx", supplyF); err != nil {
+				logger.Error("failed to udpate ndx total supply", zap.Error(err))
+			}
+		}
+	}
+
 }

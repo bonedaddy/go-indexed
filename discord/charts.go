@@ -9,6 +9,7 @@ import (
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/wcharczuk/go-chart/v2"
 	"github.com/wcharczuk/go-chart/v2/drawing"
+	"go.uber.org/zap"
 )
 
 func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
@@ -29,28 +30,28 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		prices, err = c.db.PricesInRange("defi5", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("defi5 dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "defi5"))
 			return
 		}
 	case "cc10-dai":
 		prices, err = c.db.PricesInRange("cc10", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("cc10 dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "cc10"))
 			return
 		}
 	case "ndx-dai":
 		prices, err = c.db.PricesInRange("ndx", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("ndx dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "ndx"))
 			return
 		}
 	case "eth-dai":
 		prices, err = c.db.PricesInRange("eth", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("eth dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "eth"))
 			return
 		}
 	default:

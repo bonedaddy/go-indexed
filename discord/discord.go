@@ -11,8 +11,10 @@ import (
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/config"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/bwmarrin/discordgo"
+	"go.uber.org/zap"
 	"golang.org/x/text/message"
 )
 
@@ -31,6 +33,8 @@ type Client struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     *sync.WaitGroup
+
+	logger *zap.Logger
 }
 
 func init() {
@@ -38,11 +42,11 @@ func init() {
 }
 
 // NewClient provides a wrapper around discordgo
-func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Database) (*Client, error) {
+func NewClient(ctx context.Context, cfg *config.Config, bc *bclient.Client, db *db.Database, logger *zap.Logger) (*Client, error) {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(ctx)
 	// launch price watcher bots
-	if err := launchWatchers(ctx, wg, cfg, bc, db); err != nil {
+	if err := launchWatchers(ctx, wg, cfg, bc, db, logger); err != nil {
 		cancel()
 		return nil, err
 	}
@@ -59,7 +63,7 @@ func NewClient(ctx context.Context, cfg *Config, bc *bclient.Client, db *db.Data
 	}
 
 	// updates the main bot's nickname to reflect ndx price
-	ndxPriceWatchRoutine(ctx, dg, wg, db)
+	ndxPriceWatchRoutine(ctx, dg, wg, db, logger)
 
 	// declare the base router
 	router := dgc.Create(&dgc.Router{
@@ -265,7 +269,7 @@ func (c *Client) Close() error {
 	return c.s.Close()
 }
 
-func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.WaitGroup, db *db.Database) {
+func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.WaitGroup, db *db.Database, logger *zap.Logger) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -278,22 +282,22 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 			case <-ticker.C:
 				defi5TVL, err := db.LastValueLocked("defi5")
 				if err != nil {
-					log.Println("failed to get defi5 tvl: ", err)
+					logger.Error("failed to get tvl", zap.Error(err), zap.String("asset", "defi5"))
 					continue
 				}
 				cc10TVL, err := db.LastValueLocked("cc10")
 				if err != nil {
-					log.Println("failed to get cc10 tvl: ", err)
+					logger.Error("failed to get tvl", zap.Error(err), zap.String("asset", "cc10"))
 					continue
 				}
 				price, err := db.LastPrice("ndx")
 				if err != nil {
-					log.Println("failed to get last ndx price: ", err)
+					logger.Error("failed to get price", zap.Error(err), zap.String("asset", "ndx"))
 					continue
 				}
 				guilds, err := bot.UserGuilds(0, "", "")
 				if err != nil {
-					log.Println("failed to get user guilds error: ", err)
+					logger.Error("failed to get user guilds", zap.Error(err))
 					continue
 				}
 				update := fmt.Sprintf("NDXBot: $%0.2f", price)
@@ -307,14 +311,14 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 	}()
 }
 
-func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bclient.Client, db *db.Database) error {
+func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config, bc *bclient.Client, db *db.Database, logger *zap.Logger) error {
 	for _, watcher := range cfg.Watchers {
 		watcherBot, err := discordgo.New("Bot " + watcher.DiscordToken)
 		if err != nil {
 			return err
 		}
 		if err := watcherBot.Open(); err != nil {
-			log.Printf("failed to launch watcher bot %s: %s", watcher.Currency, err)
+			logger.Error("failed to launch watcher bot", zap.Error(err), zap.String("asset", watcher.Currency))
 			continue
 		}
 		switch strings.ToLower(watcher.Currency) {
@@ -323,17 +327,8 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			go func(name string) {
 				defer watcherBot.Close() // register first so it happens before wait gorup closure
 				defer wg.Done()
-				if err := launchComboWatcherBot(ctx, watcherBot, bc, db, name); err != nil {
-					log.Printf("an error occured for %s price watcher: %s", name, err)
-				}
-			}(watcher.Currency)
-		case "orcl5":
-			wg.Add(1)
-			go func(name string) {
-				defer watcherBot.Close()
-				defer wg.Done()
-				if err := launchSingleWatcherBot(ctx, watcherBot, bc, db, name); err != nil {
-					log.Printf("an error occured for %s price watcher: %s", name, err)
+				if err := launchComboWatcherBot(ctx, watcherBot, bc, db, logger, name); err != nil {
+					logger.Error("combo watcher bot encountered error", zap.Error(err), zap.String("asset", watcher.Currency))
 				}
 			}(watcher.Currency)
 		default:
@@ -341,8 +336,8 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 			go func(name string) {
 				defer watcherBot.Close() // register first so it happens before wait gorup closure
 				defer wg.Done()
-				if err := launchSingleWatcherBot(ctx, watcherBot, bc, db, name); err != nil {
-					log.Printf("an error occured for %s price watcher: %s", name, err)
+				if err := launchSingleWatcherBot(ctx, watcherBot, bc, db, logger, name); err != nil {
+					logger.Error("single watcher bot encountered error", zap.Error(err), zap.String("asset", watcher.Currency))
 				}
 			}(watcher.Currency)
 		}
@@ -351,7 +346,7 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 }
 
 // used to launch watcher bots that monitor two prices and rotate between each
-func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
+func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, logger *zap.Logger, name string) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -369,12 +364,12 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 
 			price, err = database.LastPrice("defi5")
 			if err != nil {
-				log.Println("failed to get defi5 dai price: ", err)
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "defi5"))
 				continue
 			}
 			tvl, err = database.LastValueLocked("defi5")
 			if err != nil {
-				log.Println("failed to get defi5 tvl")
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "defi5"))
 				continue
 			}
 			defi5TVL = tvl
@@ -382,12 +377,12 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 
 			price, err = database.LastPrice("cc10")
 			if err != nil {
-				log.Println("failed to get cc10 dai price: ", err)
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "cc10"))
 				continue
 			}
 			tvl, err = database.LastValueLocked("cc10")
 			if err != nil {
-				log.Println("failed to get cc10 tvl")
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "cc10"))
 				continue
 			}
 			cc10TVL = tvl
@@ -395,7 +390,7 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 
 			guilds, err := bot.UserGuilds(0, "", "")
 			if err != nil {
-				log.Println("failed to get user guilds error: ", err)
+				logger.Error("failed to get user guilds", zap.Error(err))
 				continue
 			}
 
@@ -423,7 +418,7 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 }
 
 // used to launch watcher bots that monitor one price
-func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
+func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, logger *zap.Logger, name string) error {
 	ticker := time.NewTicker(time.Second * 30) // only run singles every 30 seconds
 	defer ticker.Stop()
 	for {
@@ -441,40 +436,40 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 		case "defi5":
 			price, err = database.LastPrice("defi5")
 			if err != nil {
-				log.Println("failed to get defi5 dai price error: ", err)
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "defi5"))
 				continue
 			}
 			tvl, err = database.LastValueLocked("defi5")
 			if err != nil {
-				log.Println("failed to get defi5 tvl: ", err)
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "defi5"))
 				continue
 			}
 		case "cc10":
 			price, err = database.LastPrice("cc10")
 			if err != nil {
-				log.Println("failed to get cc10 dai price error: ", err)
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "cc10"))
 				continue
 			}
 			tvl, err = database.LastValueLocked("cc10")
 			if err != nil {
-				log.Println("failed to get cc10 tvl: ", err)
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "cc10"))
 				continue
 			}
 		case "orcl5":
 			price, err = database.LastPrice("orcl5")
 			if err != nil {
-				log.Println("failed to get orcl5 dai price error: ", err)
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "orcl5"))
 				continue
 			}
 			tvl, err = database.LastValueLocked("orcl5")
 			if err != nil {
-				log.Println("failed to get orcl5 tvl price error: ", err)
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "orcl5"))
 				continue
 			}
 		case "ndx":
 			price, err = database.LastPrice("ndx")
 			if err != nil {
-				log.Println("failed to get ndx dai price error: ", err)
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "ndx"))
 				continue
 			}
 		default:
@@ -482,7 +477,7 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 		}
 		guilds, err := bot.UserGuilds(0, "", "")
 		if err != nil {
-			log.Println("failed to get user guilds error: ", err)
+			logger.Error("failed to get user guilds", zap.Error(err))
 			continue
 		}
 		output := printer.Sprintf("%s: $0.2f", name, price)

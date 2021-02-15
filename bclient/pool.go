@@ -1,7 +1,6 @@
 package bclient
 
 import (
-	"log"
 	"math/big"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
 )
 
 // ERC20I denotes ERC20 interface functions
@@ -58,7 +58,7 @@ func BalanceOfDecimal(ip IndexPool, addr common.Address) (decimal.Decimal, error
 }
 
 // GetTotalValueLocked returns the total value locked into the contracts
-func (c *Client) GetTotalValueLocked(ip IndexPool) (float64, error) {
+func (c *Client) GetTotalValueLocked(ip IndexPool, logger *zap.Logger) (float64, error) {
 	tokens, err := c.PoolTokensFor(ip)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get pool tokens")
@@ -107,7 +107,7 @@ func (c *Client) GetTotalValueLocked(ip IndexPool) (float64, error) {
 				tokenUsdValue: edF * tdF,
 				tokenAddress:  addr,
 			}
-			log.Printf("%s USD value: %0.2f", symbol, values[symbol].tokenUsdValue)
+			logger.Debug("usd value retrieve", zap.String("asset", symbol), zap.Float64("usd.value", values[symbol].tokenUsdValue))
 		}
 	}
 	var totalValueUSD float64

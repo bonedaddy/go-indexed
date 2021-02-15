@@ -1,4 +1,4 @@
-package discord
+package config
 
 import (
 	"os"

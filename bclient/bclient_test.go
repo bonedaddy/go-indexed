@@ -8,6 +8,7 @@ import (
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 var (
@@ -43,7 +44,7 @@ func TestBClient(t *testing.T) {
 		cc10, err := client.CC10()
 		require.NoError(t, err)
 
-		tvl, err := client.GetTotalValueLocked(cc10)
+		tvl, err := client.GetTotalValueLocked(cc10, zap.NewNop())
 		require.NoError(t, err)
 		t.Log("total value locked: ", tvl)
 
@@ -91,7 +92,7 @@ func TestBClient(t *testing.T) {
 		defi5, err := client.DEFI5()
 		require.NoError(t, err)
 
-		tvl, err := client.GetTotalValueLocked(defi5)
+		tvl, err := client.GetTotalValueLocked(defi5, zap.NewNop())
 		require.NoError(t, err)
 		t.Log("total value locked: ", tvl)
 

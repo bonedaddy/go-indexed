@@ -2,13 +2,13 @@ package discord
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"strconv"
 	"strings"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/utils"
+	"go.uber.org/zap"
 )
 
 func (c *Client) uniswapExchangeAmountHandler(ctx *dgc.Ctx) {
@@ -51,7 +51,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		price, err := c.db.LastPrice("defi5")
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("defi5 dai price fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "defi5"))
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("DEFI5-DAI exchange rate: %0.2f", price))
@@ -60,7 +60,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		price, err := c.db.LastPrice("cc10")
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("cc10 dai price fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "cc10"))
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("CC10-DAI exchange rate: %0.2f", price))
@@ -69,7 +69,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		price, err := c.db.LastPrice("eth")
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("cc10 dai price fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "eth"))
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("ETH-DAI exchange rate: %0.2f", price))
@@ -78,7 +78,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		price, err := c.db.LastPrice("ndx")
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("ndx dai price fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "ndx"))
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("NDX-DAI exchange rate: %0.2f", price))
@@ -86,7 +86,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		price, err := c.db.LastPrice("orcl5")
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("orcl5 dai price fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "orcl5"))
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("ORCL5-DAI exchange rate: %0.2f", price))
@@ -110,7 +110,7 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 		price, err := c.db.PriceChangeInRange("defi5", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("defi5 dai price change fetch failed: ", err)
+			c.logger.Error("failed to calculate price change", zap.Error(err), zap.String("asset", "defi5"))
 			return
 		}
 		var changed string
@@ -125,7 +125,7 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 		price, err := c.db.PriceChangeInRange("cc10", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("cc10 dai price change fetch failed: ", err)
+			c.logger.Error("failed to calculate price change", zap.Error(err), zap.String("asset", "cc10"))
 			return
 		}
 		var changed string
@@ -140,7 +140,7 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 		price, err := c.db.PriceChangeInRange("eth", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("cc10 dai price change failed: ", err)
+			c.logger.Error("failed to calculate price change", zap.Error(err), zap.String("asset", "eth"))
 			return
 		}
 		var changed string
@@ -155,7 +155,7 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 		price, err := c.db.PriceChangeInRange("ndx", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("ndx dai price change failed: ", err)
+			c.logger.Error("failed to calculate price change", zap.Error(err), zap.String("asset", "ndx"))
 			return
 		}
 		var changed string
@@ -169,7 +169,7 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 		price, err := c.db.PriceChangeInRange("orcl5", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("orcl5 dai price change failed: ", err)
+			c.logger.Error("failed to calculate price change", zap.Error(err), zap.String("asset", "orcl5"))
 			return
 		}
 		var changed string
