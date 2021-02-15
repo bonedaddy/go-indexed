@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -322,118 +323,17 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 	tvlTicker := time.NewTicker(time.Minute * 15)
 	defer tvlTicker.Stop()
 
-	// update the tvl price before looping to insert some data
-	go func() {
-		cc10, err := bc.CC10()
-		if err != nil {
-			log.Println("failed to get cc10 for tvl price update: ", err)
-			return
-		}
-		defi5, err := bc.DEFI5()
-		if err != nil {
-			log.Println("failed to get defi5 for tvl price udpate: ", err)
-			return
-		}
-		orcl5, err := bc.ORCL5()
-		if err != nil {
-			log.Println("failed to get orcl5 for tvl price update: ", err)
-			return
-		}
-		cc10TVL, err := bc.GetTotalValueLocked(cc10)
-		if err != nil {
-			log.Println("failed to get total value locked for cc10: ", err)
-			return
-		}
-		defi5TVL, err := bc.GetTotalValueLocked(defi5)
-		if err != nil {
-			log.Println("failed to get total value locked for defi5: ", err)
-			return
-		}
-		orcl5TVL, err := bc.GetTotalValueLocked(orcl5)
-		if err != nil {
-			log.Println("failed to get total value locked for orcl5: ", err)
-			return
-		}
-		if err := db.RecordValueLocked("defi5", defi5TVL); err != nil {
-			log.Println("failed to update tvl for defi5: ", err)
-			return
-		}
-		if err := db.RecordValueLocked("cc10", cc10TVL); err != nil {
-			log.Println("failed to update tvl for cc10: ", err)
-			return
-		}
-		if err := db.RecordValueLocked("orcl5", orcl5TVL); err != nil {
-			log.Println("failed to update tvl for orcl5: ", err)
-			return
-		}
-	}()
+	indices := []string{"defi5", "cc10", "orcl5"}
+	handleIndexUpdates(db, bc, indices)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-tvlTicker.C:
-			cc10, err := bc.CC10()
-			if err != nil {
-				log.Println("failed to get cc10 for tvl price update: ", err)
-			} else {
-				cc10TVL, err := bc.GetTotalValueLocked(cc10)
-				if err != nil {
-					log.Println("failed to get total value locked for cc10: ", err)
-				} else {
-					if err := db.RecordValueLocked("cc10", cc10TVL); err != nil {
-						log.Println("failed to update tvl for cc10: ", err)
-					}
-				}
-			}
-
-			defi5, err := bc.DEFI5()
-			if err != nil {
-				log.Println("failed to get defi5 for tvl price udpate: ", err)
-			} else {
-				defi5TVL, err := bc.GetTotalValueLocked(defi5)
-				if err != nil {
-					log.Println("failed to get total value locked for defi5: ", err)
-				} else {
-					if err := db.RecordValueLocked("defi5", defi5TVL); err != nil {
-						log.Println("failed to update tvl for defi5: ", err)
-					}
-				}
-			}
-
-			orcl5, err := bc.ORCL5()
-			if err != nil {
-				log.Println("failed to get orcl5 for tvl price update: ", err)
-			} else {
-				orcl5TVL, err := bc.GetTotalValueLocked(orcl5)
-				if err != nil {
-					log.Println("failed to get total value locked for orcl5: ", err)
-				} else {
-					if err := db.RecordValueLocked("orcl5", orcl5TVL); err != nil {
-						log.Println("failed to update tvl for orcl5: ", err)
-					}
-				}
-			}
-
 		case <-ticker.C:
-			// update defi5 price
-			price, err := bc.Defi5DaiPrice()
-			if err != nil {
-				log.Println("failed to get defi5 dai price: ", price)
-			} else {
-				if err := db.RecordPrice("defi5", price); err != nil {
-					log.Println("failed to update defi5 dai price: ", err)
-				}
-			}
-			// update cc10 price
-			price, err = bc.Cc10DaiPrice()
-			if err != nil {
-				log.Println("failed to get cc10 dai price: ", err)
-			} else {
-				if err := db.RecordPrice("cc10", price); err != nil {
-					log.Println("failed to update cc10 dai price: ", err)
-				}
-			}
+			handleIndexUpdates(db, bc, indices)
+			// handle misc updates
+
 			// update eth price
 			priceBig, err := bc.EthDaiPrice()
 			if err != nil {
@@ -444,51 +344,12 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 				}
 			}
 			// update ndx price
-			price, err = bc.NdxDaiPrice()
+			price, err := bc.NdxDaiPrice()
 			if err != nil {
 				log.Println("failed to get ndx dai price: ", err)
 			} else {
 				if err := db.RecordPrice("ndx", price); err != nil {
 					log.Println("failed to update ndx dai price: ", err)
-				}
-			}
-			// update orcl5 price
-			price, err = bc.Orcl5DaiPrice()
-			if err != nil {
-				log.Println("failed to get orcl5 dai price: ", err)
-			} else {
-				if err := db.RecordPrice("orcl5", price); err != nil {
-					log.Println("failed to update orcl5 dai price: ", err)
-				}
-			}
-			// update defi5 total supply
-			ip, err := bc.DEFI5()
-			if err != nil {
-				log.Println("failed to get defi5 contract: ", err)
-			} else {
-				supply, err := ip.TotalSupply(nil)
-				if err != nil {
-					log.Println("failed to get total supply: ", err)
-				} else {
-					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-					if err := db.RecordTotalSupply("defi5", supplyF); err != nil {
-						log.Println("failed to update defi5 total supply")
-					}
-				}
-			}
-			// update cc10 total supply
-			ip, err = bc.CC10()
-			if err != nil {
-				log.Println("failed to get cc10 contract: ", err)
-			} else {
-				supply, err := ip.TotalSupply(nil)
-				if err != nil {
-					log.Println("failed to get total supply: ", err)
-				} else {
-					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-					if err := db.RecordTotalSupply("cc10", supplyF); err != nil {
-						log.Println("failed to update cc10 total supply")
-					}
 				}
 			}
 			// update ndx total supply
@@ -506,22 +367,53 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 					}
 				}
 			}
-			// update orcl5 total supply
-			ip, err = bc.ORCL5()
-			if err != nil {
-				log.Println("failed to get orcl5 contract: ", err)
-			} else {
-				supply, err := ip.TotalSupply(nil)
-				if err != nil {
-					log.Println("failed to get total supply: ", err)
-				} else {
-					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
-					if err := db.RecordTotalSupply("orcl5", supplyF); err != nil {
-						log.Println("failed to update orcl5 total supply")
-					}
-				}
-			}
-		}
 
+		}
 	}
+
+}
+
+// handleIndexUpdates is responsible for handling updates of indice
+// tvl, total supply, and price
+func handleIndexUpdates(db *db.Database, bc *bclient.Client, indices []string) {
+	for _, indice := range indices {
+		curr := strings.ToLower(indice)
+		ip, err := bc.GetIndexPool(curr)
+		if err != nil {
+			break
+		}
+		supply, price, tvl, err := getValues(bc, ip, curr)
+		if err := db.RecordValueLocked(curr, tvl); err != nil {
+			log.Println("failed to record value locked: ", err, indice)
+		}
+		if err := db.RecordPrice(curr, price); err != nil {
+			log.Println("failed to record price: ", err, indice)
+		}
+		if err := db.RecordTotalSupply(curr, supply); err != nil {
+			log.Println("failed to record total supply: ", err, indice)
+		}
+	}
+}
+
+func getValues(bc *bclient.Client, ip bclient.IndexPool, name string) (totalSupply, price, tvl float64, err error) {
+	totalSupply, err = getTotalSupply(ip)
+	switch name {
+	case "defi5":
+		price, err = bc.Defi5DaiPrice()
+	case "cc10":
+		price, err = bc.Cc10DaiPrice()
+	case "orcl5":
+		price, err = bc.Orcl5DaiPrice()
+	}
+	tvl, err = bc.GetTotalValueLocked(ip)
+	return
+}
+
+func getTotalSupply(erc bclient.ERCO20I) (float64, error) {
+	totalSupplyBig, err := erc.TotalSupply(nil)
+	if err != nil {
+		return 0, err
+	}
+	totalSupplyF, _ := utils.ToDecimal(totalSupplyBig, 18).Float64()
+	return totalSupplyF, nil
 }
