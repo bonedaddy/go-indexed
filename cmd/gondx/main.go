@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -68,20 +67,7 @@ func main() {
 		if c.Bool("startup.sleep") {
 			time.Sleep(c.Duration("startup.sleep_time"))
 		}
-		if c.String("config") != "" {
-			return nil
-		}
-		var err error
-		if c.String("infura.api_key") != "" {
-			var websockets bool
-			if strings.Contains(c.String("infura.api_key"), "wss") {
-				websockets = true
-			}
-			bc, err = bclient.NewInfuraClient(c.String("infura.api_key"), websockets)
-		} else {
-			bc, err = bclient.NewClient(c.String("eth.rpc"))
-		}
-		return err
+		return nil
 	}
 	app.Commands = cli.Commands{
 		&cli.Command{
