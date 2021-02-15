@@ -327,6 +327,15 @@ func launchWatchers(ctx context.Context, wg *sync.WaitGroup, cfg *Config, bc *bc
 					log.Printf("an error occured for %s price watcher: %s", name, err)
 				}
 			}(watcher.Currency)
+		case "orcl5":
+			wg.Add(1)
+			go func(name string) {
+				defer watcherBot.Close()
+				defer wg.Done()
+				if err := launchSingleWatcherBot(ctx, watcherBot, bc, db, name); err != nil {
+					log.Printf("an error occured for %s price watcher: %s", name, err)
+				}
+			}(watcher.Currency)
 		default:
 			wg.Add(1)
 			go func(name string) {
@@ -415,7 +424,7 @@ func launchComboWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcli
 
 // used to launch watcher bots that monitor one price
 func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bclient.Client, database *db.Database, name string) error {
-	ticker := time.NewTicker(time.Second * 10)
+	ticker := time.NewTicker(time.Second * 30) // only run singles every 30 seconds
 	defer ticker.Stop()
 	for {
 		select {
@@ -449,6 +458,17 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 			tvl, err = database.LastValueLocked("cc10")
 			if err != nil {
 				log.Println("failed to get cc10 tvl: ", err)
+				continue
+			}
+		case "orcl5":
+			price, err = database.LastPrice("orcl5")
+			if err != nil {
+				log.Println("failed to get orcl5 dai price error: ", err)
+				continue
+			}
+			tvl, err = database.LastValueLocked("orcl5")
+			if err != nil {
+				log.Println("failed to get orcl5 tvl price error: ", err)
 				continue
 			}
 		case "ndx":
