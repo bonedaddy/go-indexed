@@ -82,8 +82,16 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("NDX-DAI exchange rate: %0.2f", price))
+	case "orcl5-dai":
+		price, err := c.db.LastPrice("orcl5")
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("orcl5 dai price fetch failed: ", err)
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("ORCL5-DAI exchange rate: %0.2f", price))
 	default:
-		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
+		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai, orcl5-dai")
 		return
 	}
 }
@@ -157,8 +165,22 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			changed = "increased"
 		}
 		ctx.RespondText(fmt.Sprintf("NDX-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
+	case "orcl5-dai":
+		price, err := c.db.PriceChangeInRange("orcl5", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			log.Println("orcl5 dai price change failed: ", err)
+			return
+		}
+		var changed string
+		if (price * 100) < 0 {
+			changed = "decreased"
+		} else {
+			changed = "increased"
+		}
+		ctx.RespondText(fmt.Sprintf("ORCL5-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
 	default:
-		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai")
+		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai, orcl5-dai")
 		return
 	}
 }

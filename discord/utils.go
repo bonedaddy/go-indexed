@@ -16,6 +16,8 @@ func (c *Client) getIndexPool(name string) (bclient.IndexPool, error) {
 		return c.bc.DEFI5()
 	case "cc10":
 		return c.bc.CC10()
+	case "orcl5":
+		return c.bc.ORCL5()
 	default:
 		return nil, errors.New("invalid pool name")
 	}
