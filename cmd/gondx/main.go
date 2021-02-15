@@ -348,6 +348,11 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 			log.Println("failed to get defi5 for tvl price udpate: ", err)
 			return
 		}
+		orcl5, err := bc.ORCL5()
+		if err != nil {
+			log.Println("failed to get orcl5 for tvl price update: ", err)
+			return
+		}
 		cc10TVL, err := bc.GetTotalValueLocked(cc10)
 		if err != nil {
 			log.Println("failed to get total value locked for cc10: ", err)
@@ -358,12 +363,21 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 			log.Println("failed to get total value locked for defi5: ", err)
 			return
 		}
+		orcl5TVL, err := bc.GetTotalValueLocked(orcl5)
+		if err != nil {
+			log.Println("failed to get total value locked for orcl5: ", err)
+			return
+		}
 		if err := db.RecordValueLocked("defi5", defi5TVL); err != nil {
 			log.Println("failed to update tvl for defi5: ", err)
 			return
 		}
 		if err := db.RecordValueLocked("cc10", cc10TVL); err != nil {
 			log.Println("failed to update tvl for cc10: ", err)
+			return
+		}
+		if err := db.RecordValueLocked("orcl5", orcl5TVL); err != nil {
+			log.Println("failed to update tvl for orcl5: ", err)
 			return
 		}
 	}()
@@ -397,6 +411,20 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 				} else {
 					if err := db.RecordValueLocked("defi5", defi5TVL); err != nil {
 						log.Println("failed to update tvl for defi5: ", err)
+					}
+				}
+			}
+
+			orcl5, err := bc.ORCL5()
+			if err != nil {
+				log.Println("failed to get orcl5 for tvl price update: ", err)
+			} else {
+				orcl5TVL, err := bc.GetTotalValueLocked(orcl5)
+				if err != nil {
+					log.Println("failed to get total value locked for orcl5: ", err)
+				} else {
+					if err := db.RecordValueLocked("orcl5", orcl5TVL); err != nil {
+						log.Println("failed to update tvl for orcl5: ", err)
 					}
 				}
 			}
@@ -436,6 +464,15 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 			} else {
 				if err := db.RecordPrice("ndx", price); err != nil {
 					log.Println("failed to update ndx dai price: ", err)
+				}
+			}
+			// update orcl5 price
+			price, err = bc.Orcl5DaiPrice()
+			if err != nil {
+				log.Println("failed to get orcl5 dai price: ", err)
+			} else {
+				if err := db.RecordPrice("orcl5", price); err != nil {
+					log.Println("failed to update orcl5 dai price: ", err)
 				}
 			}
 			// update defi5 total supply
@@ -480,6 +517,21 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database)
 					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
 					if err := db.RecordTotalSupply("ndx", supplyF); err != nil {
 						log.Println("failed to update ndx total supply")
+					}
+				}
+			}
+			// update orcl5 total supply
+			ip, err = bc.ORCL5()
+			if err != nil {
+				log.Println("failed to get orcl5 contract: ", err)
+			} else {
+				supply, err := ip.TotalSupply(nil)
+				if err != nil {
+					log.Println("failed to get total supply: ", err)
+				} else {
+					supplyF, _ := utils.ToDecimal(supply, 18).Float64()
+					if err := db.RecordTotalSupply("orcl5", supplyF); err != nil {
+						log.Println("failed to update orcl5 total supply")
 					}
 				}
 			}
