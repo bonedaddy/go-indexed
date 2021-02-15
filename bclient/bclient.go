@@ -137,6 +137,9 @@ func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) 
 // Uniswap returns a uniswap client helper
 func (c *Client) Uniswap() *uniswap.Client { return c.uc }
 
+// EthClient returns the underlying ethclient connection
+func (c *Client) EthClient() *ethclient.Client { return c.ec }
+
 // GovernorAlpha returns the GovernorAlpha contracts binding at the active governance address
 func (c *Client) GovernorAlpha() (*governoralpha.Governoralpha, error) {
 	return governoralpha.NewGovernoralpha(GovernorAlpha, c.ec)

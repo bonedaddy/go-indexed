@@ -31,6 +31,7 @@ func TestBClient(t *testing.T) {
 	t.Cleanup(func() {
 		client.Close()
 	})
+	_ = client.EthClient()
 	t.Run("Misc", func(t *testing.T) {
 		_, err := client.CurrentBlock()
 		require.NoError(t, err)
