@@ -17,3 +17,5 @@ config.yml
 .scripts
 grafana
 prom_data
+**/*.md
+maillist
