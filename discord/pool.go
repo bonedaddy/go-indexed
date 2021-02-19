@@ -67,7 +67,7 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 		// get tvl across all pools
 		var (
 			totalLocked float64
-			pools       = []string{"defi5", "cc10" /*, "orcl5"*/}
+			pools       = []string{"defi5", "cc10", "orcl5"}
 		)
 		for _, pool := range pools {
 			tvl, err := c.db.LastValueLocked(strings.ToLower(pool))
