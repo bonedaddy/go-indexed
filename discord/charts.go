@@ -39,6 +39,13 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "cc10"))
 			return
 		}
+	case "orcl5-dai":
+		prices, err = c.db.PricesInRange("orcl5", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "orcl5"))
+			return
+		}
 	case "ndx-dai":
 		prices, err = c.db.PricesInRange("ndx", window)
 		if err != nil {
