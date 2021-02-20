@@ -478,7 +478,7 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 			logger.Error("failed to get user guilds", zap.Error(err))
 			continue
 		}
-		output := printer.Sprintf("%s: $0.2f", name, price)
+		output := printer.Sprintf("%s: $%0.2f", name, price)
 		parsed := ParseValue(tvl)
 		for _, guild := range guilds {
 			bot.GuildMemberNickname(guild.ID, "@me", output)
