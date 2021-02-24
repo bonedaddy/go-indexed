@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/bonedaddy/go-indexed/bindings/erc20"
@@ -64,6 +63,11 @@ func (c *Client) CC10() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(CC10TokenAddress, c.ec)
 }
 
+// ORCL5 returns a ORCL5 contract binding
+func (c *Client) ORCL5() (IndexPool, error) {
+	return poolbindings.NewPoolbindings(ORCL5TokenAddress, c.ec)
+}
+
 // MCAPControllerAt returns the marketcap square root controller bindings for an IndexPool
 func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontroller, error) {
 	cntrl, err := ip.GetController(nil)
@@ -112,14 +116,12 @@ func (c *Client) StakingAt(contractType string) (*stakingbindings.Stakingbinding
 func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) {
 	tokens, err := ip.GetCurrentTokens(nil)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	var out = make(map[string]common.Address)
 	for _, token := range tokens {
 		ec, err := erc20.NewErc20(token, c.ec)
 		if err != nil {
-			log.Println("erc: ", err)
 			return nil, err
 		}
 		// get the token name

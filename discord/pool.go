@@ -2,13 +2,13 @@ package discord
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bwmarrin/discordgo"
 	"github.com/ethereum/go-ethereum/common"
+	"go.uber.org/zap"
 )
 
 func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
@@ -18,7 +18,7 @@ func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
 	}
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
-	ip, err := c.getIndexPool(poolName)
+	ip, err := c.bc.GetIndexPool(poolName)
 	if err != nil {
 		ctx.RespondText("invalid pool")
 		return
@@ -47,7 +47,7 @@ func (c *Client) poolBalanceHandler(ctx *dgc.Ctx) {
 	arguments := ctx.Arguments
 	poolName := arguments.Get(0).Raw()
 	accountAddr := arguments.Get(1).Raw()
-	ip, err := c.getIndexPool(poolName)
+	ip, err := c.bc.GetIndexPool(poolName)
 	if err != nil {
 		ctx.RespondText("invalid pool")
 		return
@@ -67,12 +67,12 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 		// get tvl across all pools
 		var (
 			totalLocked float64
-			pools       = []string{"defi5", "cc10"}
+			pools       = []string{"defi5", "cc10", "orcl5"}
 		)
 		for _, pool := range pools {
 			tvl, err := c.db.LastValueLocked(strings.ToLower(pool))
 			if err != nil {
-				log.Println("failed to get total value locked: ", err)
+				c.logger.Error("failed to get total value locked", zap.Error(err), zap.String("asset", pool))
 				ctx.RespondText("failed to get total value locked")
 				return
 			}
@@ -83,7 +83,7 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 		poolName := arguments.Get(0).Raw()
 		tvl, err := c.db.LastValueLocked(strings.ToLower(poolName))
 		if err != nil {
-			log.Println("failed to get total value locked: ", err)
+			c.logger.Error("failed to get total value locked", zap.Error(err), zap.String("asset", poolName))
 			ctx.RespondText("failed to get total value locked")
 			return
 		}

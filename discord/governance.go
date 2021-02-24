@@ -2,7 +2,6 @@ package discord
 
 import (
 	"fmt"
-	"log"
 	"math/big"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/bonedaddy/go-indexed/bclient"
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/bwmarrin/discordgo"
+	"go.uber.org/zap"
 )
 
 func (c *Client) governanceCurrentProposalsHandler(ctx *dgc.Ctx) {
@@ -18,13 +18,13 @@ func (c *Client) governanceCurrentProposalsHandler(ctx *dgc.Ctx) {
 	}
 	gov, err := c.bc.GovernorAlpha()
 	if err != nil {
-		log.Println("governor alpha fetch failure: ", err)
+		c.logger.Error("failed to fetch governor alpha", zap.Error(err))
 		ctx.RespondText("failed to get governance contract handler")
 		return
 	}
 	count, err := gov.ProposalCount(nil)
 	if err != nil {
-		log.Println("failed to get proposal count: ", err)
+		c.logger.Error("failed to get proposal count", zap.Error(err))
 		ctx.RespondText("failed to get proposal count")
 		return
 	}
@@ -47,13 +47,13 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 	}
 	gov, err := c.bc.GovernorAlpha()
 	if err != nil {
-		log.Println("governor alpha fetch failure: ", err)
+		c.logger.Error("failed to fetch governor alpha", zap.Error(err))
 		ctx.RespondText("failed to get governance contract handler")
 		return
 	}
 	proposal, err := gov.Proposals(nil, big.NewInt(number))
 	if err != nil {
-		log.Println("failed to get proposal: ", err)
+		c.logger.Error("failed to get proposal count", zap.Error(err))
 		ctx.RespondText("failed to get proposal")
 		return
 	}
@@ -70,7 +70,7 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 	*/
 	proposalState, err := bclient.GetProposalState(gov, big.NewInt(number))
 	if err != nil {
-		log.Println("failed to get proposal state: ", err)
+		c.logger.Error("failed to get proposal state", zap.Error(err))
 		ctx.RespondText("failed to get proposal state")
 		return
 	}
@@ -78,7 +78,7 @@ func (c *Client) governanceProposalInfoHandler(ctx *dgc.Ctx) {
 	againstVotes, _ := utils.ToDecimal(proposal.AgainstVotes, 18).Float64()
 	_currBlock, err := c.bc.CurrentBlock()
 	if err != nil {
-		log.Println("failed to get current block: ", err)
+		c.logger.Error("failed to get current block", zap.Error(err))
 		ctx.RespondText("failed to get current block")
 		return
 	}

@@ -2,13 +2,13 @@ package discord
 
 import (
 	"bytes"
-	"log"
 	"strings"
 
 	"github.com/bonedaddy/dgc"
 	"github.com/bonedaddy/go-indexed/db"
 	"github.com/wcharczuk/go-chart/v2"
 	"github.com/wcharczuk/go-chart/v2/drawing"
+	"go.uber.org/zap"
 )
 
 func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
@@ -29,28 +29,35 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 		prices, err = c.db.PricesInRange("defi5", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("defi5 dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "defi5"))
 			return
 		}
 	case "cc10-dai":
 		prices, err = c.db.PricesInRange("cc10", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("cc10 dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "cc10"))
+			return
+		}
+	case "orcl5-dai":
+		prices, err = c.db.PricesInRange("orcl5", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "orcl5"))
 			return
 		}
 	case "ndx-dai":
 		prices, err = c.db.PricesInRange("ndx", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("ndx dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "ndx"))
 			return
 		}
 	case "eth-dai":
 		prices, err = c.db.PricesInRange("eth", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
-			log.Println("eth dai price change fetch failed: ", err)
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "eth"))
 			return
 		}
 	default:
@@ -140,13 +147,13 @@ func (c *Client) priceWindowChart(ctx *dgc.Ctx) {
 
 	buffer := bytes.NewBuffer(nil)
 	if err := graph.Render(chart.PNG, buffer); err != nil {
-		log.Println("failed to render SMA: ", err)
+		c.logger.Error("failed to render sma", zap.Error(err))
 		ctx.RespondText("failed to render SMA")
 		return
 	}
 
 	if _, err := ctx.Session.ChannelFileSend(ctx.Event.ChannelID, "chart.png", buffer); err != nil {
-		log.Println("failed to upload chart: ", err)
+		c.logger.Error("failed to upload chart", zap.Error(err))
 		ctx.RespondText("failed to upload chart")
 		return
 	}

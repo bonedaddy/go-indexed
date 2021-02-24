@@ -1,9 +1,11 @@
-package discord
+package config
 
 import (
 	"io/ioutil"
 	"os"
 
+	"go.bobheadxi.dev/zapx/zapx"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
@@ -17,6 +19,8 @@ type Config struct {
 	ETHRPCEndpoint  string    `yaml:"eth_rpc_endpoint"`
 	Watchers        []Watcher `yaml:"watchers"`
 	Database        Database  `yaml:"database"`
+	Logger          `yaml:"logger"`
+	Indices         []string `yaml:"indices"`
 }
 
 // Database provides configuration over our database connection
@@ -38,6 +42,15 @@ type Watcher struct {
 	Currency     string `yaml:"currency"`
 }
 
+// Logger provides configuration over zap logger
+type Logger struct {
+	Path     string                 `yaml:"path"`
+	Debug    bool                   `yaml:"debug"`
+	Dev      bool                   `yaml:"dev"`
+	FileOnly bool                   `yaml:"file_only"`
+	Fields   map[string]interface{} `yaml:"fields"`
+}
+
 var (
 	// ExampleConfig is primarily used to provide a template for generating the config file
 	ExampleConfig = &Config{
@@ -57,6 +70,12 @@ var (
 			DBName:         "indexed",
 			DBPath:         "/changeme",
 			SSLModeDisable: false,
+		},
+		Indices: []string{"defi5", "cc10", "orcl5"},
+		Logger: Logger{
+			Path:  "gondx.log",
+			Debug: true,
+			Dev:   true,
 		},
 	}
 )
@@ -81,4 +100,23 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+// LoggerFromConfig returns a logger from our config
+func LoggerFromConfig(cfg *Config) (*zap.Logger, error) {
+	var opts []zapx.Option
+	if cfg.Logger.Debug {
+		opts = append(opts, zapx.WithDebug(true))
+	}
+	if cfg.Logger.FileOnly {
+		opts = append(opts, zapx.OnlyToFile())
+	}
+	if cfg.Logger.Fields != nil {
+		opts = append(opts, zapx.WithFields(cfg.Logger.Fields))
+	}
+	return zapx.New(
+		cfg.Logger.Path,
+		cfg.Logger.Dev,
+		opts...,
+	)
 }
