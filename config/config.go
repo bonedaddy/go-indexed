@@ -71,7 +71,7 @@ var (
 			DBPath:         "/changeme",
 			SSLModeDisable: false,
 		},
-		Indices: []string{"defi5", "cc10", "orcl5"},
+		Indices: []string{"defi5", "cc10", "orcl5", "degen10"},
 		Logger: Logger{
 			Path:  "gondx.log",
 			Debug: true,

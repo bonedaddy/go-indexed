@@ -67,14 +67,13 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 		// get tvl across all pools
 		var (
 			totalLocked float64
-			pools       = []string{"defi5", "cc10", "orcl5"}
+			pools       = []string{"defi5", "cc10", "orcl5", "degen10"}
 		)
 		for _, pool := range pools {
 			tvl, err := c.db.LastValueLocked(strings.ToLower(pool))
 			if err != nil {
 				c.logger.Error("failed to get total value locked", zap.Error(err), zap.String("asset", pool))
-				ctx.RespondText("failed to get total value locked")
-				return
+				continue // instead of bailing log the error and continue, this makes it easier to roll out price tracking updates sooner
 			}
 			totalLocked += tvl
 		}

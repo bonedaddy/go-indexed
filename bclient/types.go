@@ -17,6 +17,7 @@ var (
 	cc10Addr           = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
 	cc10StakeAddr      = "0xE1dE5Ebd607f1Da1c34D78b760B9C87901d0Ba35"
 	orcl5Addr          = "0xD6cb2aDF47655B1bABdDc214d79257348CBC39A7"
+	degen10Addr        = "0x94A7e37Be8d0c3Ca80F147EC60B6b1f6d3e43106"
 	// DEFI5TokenAddress is the address of the DEFI5 token/pool contract
 	DEFI5TokenAddress = common.HexToAddress(defi5Addr)
 	// DEFI5StakingAddress is the address of the DEFI5 staking contract
@@ -31,6 +32,8 @@ var (
 	CC10TokenAddress = common.HexToAddress(cc10Addr)
 	// ORCL5TokenAddress is the address of the ORCL5 token/pool contract
 	ORCL5TokenAddress = common.HexToAddress(orcl5Addr)
+	// DEGEN10TokenAddress is the address of the DEGEN10 token contract
+	DEGEN10TokenAddress = common.HexToAddress(degen10)
 	// WETHTokenAddress is the address of the WETH token contract
 	WETHTokenAddress = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 	// DAITokenAddress is the address of the MCD (Multi Collateral DAI) contract

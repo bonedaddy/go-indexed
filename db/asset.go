@@ -21,6 +21,7 @@ var (
 		Asset("CC10"),
 		Asset("ETH"),
 		Asset("ORCL5"),
+		Asset("DEGEN10"),
 	}
 	// ErrInvalidAsset is an error returned when the given asset specified is invalid
 	ErrInvalidAsset = errors.New("invalid asset")

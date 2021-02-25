@@ -382,6 +382,8 @@ func getValues(bc *bclient.Client, ip bclient.IndexPool, logger *zap.Logger, nam
 		price, err = bc.Cc10DaiPrice()
 	case "orcl5":
 		price, err = bc.Orcl5DaiPrice()
+	case "degen10":
+		price, err = bc.Degen10DaiPrice()
 	}
 	tvl, err = bc.GetTotalValueLocked(ip, logger)
 	return

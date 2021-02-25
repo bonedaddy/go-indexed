@@ -13,8 +13,12 @@ func (c *Client) getStakingRewards(name string) (*stakingbindings.Stakingbinding
 	switch name {
 	case "defi5":
 		return c.bc.StakingAt("defi5")
+	case "cc10":
+		return c.bc.StakingAt("cc10")
 	case "univ2-eth-defi5":
 		return c.bc.StakingAt("univ2-eth-defi5")
+	case "univ2-eth-cc10":
+		return c.bc.StakingAt("univ2-eth-cc10")
 	default:
 		return nil, errors.New("invalid staking rewards name")
 	}
