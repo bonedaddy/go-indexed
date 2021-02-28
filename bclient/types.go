@@ -33,7 +33,7 @@ var (
 	// ORCL5TokenAddress is the address of the ORCL5 token/pool contract
 	ORCL5TokenAddress = common.HexToAddress(orcl5Addr)
 	// DEGEN10TokenAddress is the address of the DEGEN10 token contract
-	DEGEN10TokenAddress = common.HexToAddress(degen10)
+	DEGEN10TokenAddress = common.HexToAddress(degen10Addr)
 	// WETHTokenAddress is the address of the WETH token contract
 	WETHTokenAddress = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 	// DAITokenAddress is the address of the MCD (Multi Collateral DAI) contract

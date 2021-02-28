@@ -147,9 +147,9 @@ func (c *Client) Reserves(pair string) (*uniswap.Reserve, error) {
 	case "eth-dai":
 		return c.uc.GetReserves(WETHTokenAddress, DAITokenAddress)
 	case "degen10-eth":
-		return c.uc.GetReserves(amount, DEGEN10TOkenAddress, WETHTokenAddress)
+		return c.uc.GetReserves(DEGEN10TokenAddress, WETHTokenAddress)
 	case "eth-degen10":
-		return c.uc.GetReserves(amount, WETHTokenAddress, DEGEN10TokenAddress)
+		return c.uc.GetReserves(WETHTokenAddress, DEGEN10TokenAddress)
 	default:
 		return nil, errors.New("unsupported pair")
 	}
@@ -175,7 +175,7 @@ func (c *Client) ExchangeAmount(amount *big.Int, pair string) (*big.Int, error) 
 	case "eth-orcl5":
 		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, ORCL5TokenAddress)
 	case "degen10-eth":
-		return c.uc.GetExchangeAmount(amount, DEGEN10TOkenAddress, WETHTokenAddress)
+		return c.uc.GetExchangeAmount(amount, DEGEN10TokenAddress, WETHTokenAddress)
 	case "eth-degen10":
 		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, DEGEN10TokenAddress)
 	default:
