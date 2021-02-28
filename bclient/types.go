@@ -17,7 +17,7 @@ var (
 	cc10Addr           = "0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
 	cc10StakeAddr      = "0xE1dE5Ebd607f1Da1c34D78b760B9C87901d0Ba35"
 	orcl5Addr          = "0xD6cb2aDF47655B1bABdDc214d79257348CBC39A7"
-	degen10Addr        = "0x94A7e37Be8d0c3Ca80F147EC60B6b1f6d3e43106"
+	degen10Addr        = "0x126c121f99e1E211dF2e5f8De2d96Fa36647c855"
 	// DEFI5TokenAddress is the address of the DEFI5 token/pool contract
 	DEFI5TokenAddress = common.HexToAddress(defi5Addr)
 	// DEFI5StakingAddress is the address of the DEFI5 staking contract
