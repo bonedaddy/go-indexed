@@ -331,10 +331,10 @@ func main() {
 }
 
 func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database, logger *zap.Logger, cfg *config.Config) {
-	ticker := time.NewTicker(time.Second * 120) // update every 2m
+	ticker := time.NewTicker(time.Second * 180) // update every 3m
 	defer ticker.Stop()
-	// update TVL every 20 minutes
-	tvlTicker := time.NewTicker(time.Minute * 20)
+	// update TVL every 25 minutes
+	tvlTicker := time.NewTicker(time.Minute * 25)
 	defer tvlTicker.Stop()
 
 	// do an initial update
