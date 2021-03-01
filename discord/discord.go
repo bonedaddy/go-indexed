@@ -475,6 +475,9 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 				continue
 			}
 		case "degen10":
+			// the degen index is named DEGEN but the bot uses the indexed name and its index size
+			// internally for referencing pools so override the name
+			name = "DEGEN"
 			price, err = database.LastPrice("degen10")
 			if err != nil {
 				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "degen10"))
