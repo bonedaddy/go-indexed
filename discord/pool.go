@@ -80,6 +80,10 @@ func (c *Client) poolTotalValueLocked(ctx *dgc.Ctx) {
 		ctx.RespondText(printer.Sprintf("total value locked across all pools: $%0.2f", totalLocked))
 	} else {
 		poolName := arguments.Get(0).Raw()
+		// handle cases where degen10 is given as degen
+		if strings.ToLower(poolName) == "degen" {
+			poolName = "degen10"
+		}
 		tvl, err := c.db.LastValueLocked(strings.ToLower(poolName))
 		if err != nil {
 			c.logger.Error("failed to get total value locked", zap.Error(err), zap.String("asset", poolName))
