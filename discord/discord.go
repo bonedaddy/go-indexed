@@ -474,7 +474,7 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "orcl5"))
 				continue
 			}
-		case "degen10":
+		case "degen10", "degen":
 			// the degen index is named DEGEN but the bot uses the indexed name and its index size
 			// internally for referencing pools so override the name
 			name = "DEGEN"

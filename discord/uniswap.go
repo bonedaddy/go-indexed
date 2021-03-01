@@ -90,7 +90,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("ORCL5-DAI exchange rate: %0.2f", price))
-	case "degen10-dai":
+	case "degen10-dai", "degen-dai":
 		price, err := c.db.LastPrice("degen10")
 		if err != nil {
 			ctx.RespondText("failed to get price")
@@ -99,7 +99,7 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 		}
 		ctx.RespondText(fmt.Sprintf("DEGEN10-DAI exchange rate: %0.2f", price))
 	default:
-		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai, orcl5-dai")
+		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai, orcl5-dai, degen10-dai, degen-dai")
 		return
 	}
 }
@@ -187,7 +187,7 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			changed = "increased"
 		}
 		ctx.RespondText(fmt.Sprintf("ORCL5-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
-	case "degen10-dai":
+	case "degen10-dai", "degen-dai":
 		price, err := c.db.PriceChangeInRange("degen10", window)
 		if err != nil {
 			ctx.RespondText("failed to get price")
