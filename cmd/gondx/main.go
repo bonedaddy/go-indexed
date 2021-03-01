@@ -389,7 +389,7 @@ func getValues(bc *bclient.Client, ip bclient.IndexPool, logger *zap.Logger, nam
 	return
 }
 
-func getTotalSupply(erc bclient.ERCO20I) (float64, error) {
+func getTotalSupply(erc bclient.ERC20I) (float64, error) {
 	totalSupplyBig, err := erc.TotalSupply(nil)
 	if err != nil {
 		return 0, err

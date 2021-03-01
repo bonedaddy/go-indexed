@@ -14,13 +14,14 @@ type Config struct {
 	// the token used by the main bot (NDXBot)
 	MainDiscordToken string `yaml:"main_discord_token"`
 	// if nil we dont use infura and connect directly to the rpc node below
-	InfuraAPIKey    string    `yaml:"infura_api_key"`
-	InfuraWSEnabled bool      `yaml:"infura_ws_enabled"`
-	ETHRPCEndpoint  string    `yaml:"eth_rpc_endpoint"`
-	Watchers        []Watcher `yaml:"watchers"`
-	Database        Database  `yaml:"database"`
-	Logger          `yaml:"logger"`
-	Indices         []string `yaml:"indices"`
+	InfuraAPIKey      string    `yaml:"infura_api_key"`
+	InfuraWSEnabled   bool      `yaml:"infura_ws_enabled"`
+	ETHRPCEndpoint    string    `yaml:"eth_rpc_endpoint"`
+	MulticallContract string    `yaml:"multicall_contract"`
+	Watchers          []Watcher `yaml:"watchers"`
+	Database          Database  `yaml:"database"`
+	Logger            `yaml:"logger"`
+	Indices           []string `yaml:"indices"`
 }
 
 // Database provides configuration over our database connection
@@ -54,10 +55,11 @@ type Logger struct {
 var (
 	// ExampleConfig is primarily used to provide a template for generating the config file
 	ExampleConfig = &Config{
-		MainDiscordToken: "CHANGEME-MAIN",
-		InfuraAPIKey:     "INFURA-KEY",
-		InfuraWSEnabled:  false,
-		ETHRPCEndpoint:   "http://localhost:8545",
+		MainDiscordToken:  "CHANGEME-MAIN",
+		InfuraAPIKey:      "INFURA-KEY",
+		InfuraWSEnabled:   false,
+		ETHRPCEndpoint:    "http://localhost:8545",
+		MulticallContract: "0x3067b1b7bf344027c7439509fbdf344eb25f5991",
 		Watchers: []Watcher{
 			{DiscordToken: "CHANGEME-TOKEN", Currency: "CHANGEME-CURRENCY"},
 		},

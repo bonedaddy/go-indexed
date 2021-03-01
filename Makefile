@@ -5,7 +5,7 @@ cli:
 	go build -o gondx -ldflags "-X main.Version=$(GIT_VERSION)" ./cmd/gondx
 
 .PHONY: all
-all: copy-abi gen-bindings
+all: copy-abi compile-contracts gen-bindings 
 
 .PHONY: copy-abi
 copy-abi:
@@ -14,6 +14,10 @@ copy-abi:
 	cp indexed-core/abi/MarketCapSqrtController.json abi
 	#cp uniswap-v2-core/abi/IUniswap*.json abi
 	cp indexed-governance/abi/GovernorAlpha.json abi
+
+.PHONY: compile-contracts
+compile-contracts:
+	solc --bin --abi -o bin --overwrite contracts/SimpleMultiCall.sol
 
 .PHONY: gen-bindings
 gen-bindings:
@@ -37,6 +41,7 @@ gen-bindings:
 	abigen --abi abi/IUniswapV2Factory.json --pkg uniswapv2factory --out bindings/uniswapv2/factory/v2factory.go
 	abigen --abi abi/IUniswapV2Callee.json --pkg uniswapv2callee --out bindings/uniswapv2/callee/v2callee.go
 	abigen --abi abi/GovernorAlpha.json --pkg governoralpha --out bindings/governor_alpha/bindings.go
+	abigen --abi bin/SimpleMultiCall.abi --bin bin/SimpleMultiCall.bin --pkg multicall --out bindings/multicall/bindings.go
 
 .PHONY: docker-build
 docker-build:
