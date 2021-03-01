@@ -1,8 +1,4 @@
-indexed-core
-indexed-js
-indexed-uv2oracle
-uniswap-v2-core
-indexed-governance
+
 abi
 .git
 .gitmodules
@@ -13,9 +9,43 @@ release
 files
 config.yml
 ./gondx
-./indexed.db
 .scripts
 grafana
 prom_data
-**/*.md
 maillist
+
+
+# submodules
+
+indexed-core
+indexed-js
+indexed-uv2oracle
+uniswap-v2-core
+indexed-governance
+
+# misc
+
+.git
+.gitmodules
+LICENSE
+**/Makefile
+release
+files
+.scripts
+.travis.yml
+circuit-breaker
+sigma-core
+bin
+contracts
+
+# regexs
+**/*.yaml
+**/*.yml
+**/*.db
+**/*.log
+**/*.profile
+**/*.md
+**/*.conf
+**/*.png
+**/*.txt
+**/*.conf
