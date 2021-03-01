@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/bonedaddy/go-indexed/bclient"
+	"github.com/bonedaddy/go-indexed/bindings/multicall"
 	"github.com/bonedaddy/go-indexed/config"
 	"github.com/bonedaddy/go-indexed/dashboard"
 	"github.com/bonedaddy/go-indexed/db"
@@ -175,14 +176,17 @@ func main() {
 								if err := database.AutoMigrate(); err != nil {
 									return err
 								}
+								mc, err := bc.MultiCall(cfg.MulticallContract)
+								if err != nil {
+									return err
+								}
 								wg := &sync.WaitGroup{}
 								wg.Add(1)
-								// do an initial seed
-								processUpdates(bc, database, logger, cfg.Indices)
 								// launch database price updater loop
 								go func() {
 									defer wg.Done()
-									dbPriceUpdateLoop(ctx, bc, database, logger, cfg)
+									// this does an initial seed
+									dbPriceUpdateLoop(ctx, bc, database, logger, cfg, mc)
 								}()
 
 								sc := make(chan os.Signal, 1)
@@ -239,18 +243,20 @@ func main() {
 						}
 						defer database.Close()
 						if err := database.AutoMigrate(); err != nil {
-
+							return err
+						}
+						mc, err := bc.MultiCall(cfg.MulticallContract)
+						if err != nil {
 							return err
 						}
 						wg := &sync.WaitGroup{}
 						if c.Bool("update.database") {
-							// do an initial seed
-							processUpdates(bc, database, logger, cfg.Indices)
 							wg.Add(1)
 							// launch database price updater loop
 							go func() {
 								defer wg.Done()
-								dbPriceUpdateLoop(ctx, bc, database, logger, cfg)
+								// this loop handles the initial seed
+								dbPriceUpdateLoop(ctx, bc, database, logger, cfg, mc)
 							}()
 						}
 
@@ -330,22 +336,21 @@ func main() {
 	}
 }
 
-func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database, logger *zap.Logger, cfg *config.Config) {
+func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database, logger *zap.Logger, cfg *config.Config, mc *multicall.Multicall) {
 	ticker := time.NewTicker(time.Second * 240) // update every 4m
 	defer ticker.Stop()
 	// update TVL every 35 minutes
 	tvlTicker := time.NewTicker(time.Minute * 35)
 	defer tvlTicker.Stop()
-
 	// do an initial update
-	processUpdates(bc, db, logger, cfg.Indices)
+	processUpdates(bc, db, logger, mc, cfg.Indices)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			processUpdates(bc, db, logger, cfg.Indices)
+			processUpdates(bc, db, logger, mc, cfg.Indices)
 		}
 	}
 
@@ -353,14 +358,14 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database,
 
 // handleIndexUpdates is responsible for handling updates of indice
 // tvl, total supply, and price
-func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger, indices []string) {
+func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger, mc *multicall.Multicall, indices []string) {
 	for _, indice := range indices {
 		curr := strings.ToLower(indice)
 		ip, err := bc.GetIndexPool(curr)
 		if err != nil {
 			break
 		}
-		supply, price, tvl, err := getValues(bc, ip, logger, curr)
+		supply, price, tvl, err := getValues(bc, ip, mc, logger, curr)
 		if err := db.RecordValueLocked(curr, tvl); err != nil {
 			logger.Error("failed to record value locked", zap.Error(err), zap.String("indice", indice))
 		}
@@ -373,19 +378,24 @@ func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger,
 	}
 }
 
-func getValues(bc *bclient.Client, ip bclient.IndexPool, logger *zap.Logger, name string) (totalSupply, price, tvl float64, err error) {
+func getValues(bc *bclient.Client, ip bclient.IndexPool, mc *multicall.Multicall, logger *zap.Logger, name string) (totalSupply, price, tvl float64, err error) {
 	totalSupply, err = getTotalSupply(ip)
+	var poolAddress common.Address
 	switch name {
 	case "defi5":
+		poolAddress = bclient.DEFI5TokenAddress
 		price, err = bc.Defi5DaiPrice()
 	case "cc10":
+		poolAddress = bclient.CC10TokenAddress
 		price, err = bc.Cc10DaiPrice()
 	case "orcl5":
+		poolAddress = bclient.ORCL5TokenAddress
 		price, err = bc.Orcl5DaiPrice()
 	case "degen10":
+		poolAddress = bclient.DEGEN10TokenAddress
 		price, err = bc.Degen10DaiPrice()
 	}
-	tvl, err = bc.GetTotalValueLocked(ip, logger)
+	tvl, err = bc.GetTotalValueLocked(ip, mc, logger, poolAddress)
 	return
 }
 
@@ -398,9 +408,9 @@ func getTotalSupply(erc bclient.ERC20I) (float64, error) {
 	return totalSupplyF, nil
 }
 
-func processUpdates(bc *bclient.Client, db *db.Database, logger *zap.Logger, indices []string) {
+func processUpdates(bc *bclient.Client, db *db.Database, logger *zap.Logger, mc *multicall.Multicall, indices []string) {
 	// do an initial update
-	handleIndexUpdates(db, bc, logger, indices)
+	handleIndexUpdates(db, bc, logger, mc, indices)
 	// update eth price seperately as it requires special handling
 	priceBig, err := bc.EthDaiPrice()
 	if err != nil {

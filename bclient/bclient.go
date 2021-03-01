@@ -9,6 +9,7 @@ import (
 	"github.com/bonedaddy/go-indexed/bindings/erc20"
 	governoralpha "github.com/bonedaddy/go-indexed/bindings/governor_alpha"
 	mcapscontroller "github.com/bonedaddy/go-indexed/bindings/marketcap_sqrt_controller"
+	"github.com/bonedaddy/go-indexed/bindings/multicall"
 	poolbindings "github.com/bonedaddy/go-indexed/bindings/pool"
 	stakingbindings "github.com/bonedaddy/go-indexed/bindings/staking_rewards"
 	uv2oraclebindings "github.com/bonedaddy/go-indexed/bindings/uniswapv2_oracle"
@@ -117,6 +118,28 @@ func (c *Client) StakingAt(contractType string) (*stakingbindings.Stakingbinding
 
 }
 
+// PoolTokensForMC is equivalent to PoolTokensFor but using the multicall contract
+func (c *Client) PoolTokensForMC(mc *multicall.Multicall, poolAddress common.Address) (map[string]common.Address, error) {
+	tokenAddrs, tokenSymbols, err := mc.PoolTokensFor(nil, poolAddress)
+	if err != nil {
+		return nil, err
+	}
+	if len(tokenAddrs) != len(tokenSymbols) {
+		return nil, errors.New("tokenAddrs and tokenSymbols lengths are mismatched")
+	}
+	out := make(map[string]common.Address)
+	for i := 0; i < len(tokenAddrs); i++ {
+		var symbol string
+		if tokenSymbols[i] == "" {
+			symbol = guessTokenName(tokenAddrs[i].String())
+		} else {
+			symbol = tokenSymbols[i]
+		}
+		out[symbol] = tokenAddrs[i]
+	}
+	return out, nil
+}
+
 // PoolTokensFor returns the pools tokens baseketed in the pool, and their ERC20 name
 func (c *Client) PoolTokensFor(ip IndexPool) (map[string]common.Address, error) {
 	tokens, err := ip.GetCurrentTokens(nil)
@@ -150,6 +173,11 @@ func (c *Client) EthClient() *ethclient.Client { return c.ec }
 // GovernorAlpha returns the GovernorAlpha contracts binding at the active governance address
 func (c *Client) GovernorAlpha() (*governoralpha.Governoralpha, error) {
 	return governoralpha.NewGovernoralpha(GovernorAlpha, c.ec)
+}
+
+// MultiCall returns the multicall contract
+func (c *Client) MultiCall(addr string) (*multicall.Multicall, error) {
+	return multicall.NewMulticall(common.HexToAddress(addr), c.ec)
 }
 
 // Close terminates the blockchain connection

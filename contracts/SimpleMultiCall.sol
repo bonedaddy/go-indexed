@@ -7,12 +7,14 @@ interface IndexPoolI {
   function getDenormalizedWeight(address token) external view returns (uint256);
   function getBalance(address token) external view returns (uint256);
   function getUsedBalance(address token) external view returns (uint256);
-  function getSpotPrice(address tokenIn, address tokenOut) external view returns (uint256);    
+  function getSpotPrice(address tokenIn, address tokenOut) external view returns (uint256);
+  function getCurrentTokens() external view returns (address[] memory); 
 }
 
 interface ERC20I {
     function totalSupply() external view returns (uint256);
     function decimals() external view returns (uint8);
+    function symbol() external view returns (string memory);
 }
 
 /**
@@ -84,6 +86,23 @@ contract SimpleMultiCall {
             prices[i] = IndexPoolI(poolAddress).getSpotPrice(inTokens[i], outTokens[i]);
         }
         return (inTokens, outTokens, prices);
+    }
+
+    // returns the current tokens held by a pool
+    // along with their ERC20 symbol names
+    function poolTokensFor(
+        address poolAddress
+    )
+        public view
+        returns (address[] memory, string[] memory)
+    {
+        address[] memory poolTokens = IndexPoolI(poolAddress).getCurrentTokens();
+        require(poolTokens.length > 0, "no pool tokens");
+        string[] memory symbols = new string[](poolTokens.length);
+        for (uint256 i = 0; i < poolTokens.length; i++) {
+            symbols[i] = ERC20I(poolTokens[i]).symbol();
+        }
+        return (poolTokens, symbols);
     }
 
     // erc20 methods

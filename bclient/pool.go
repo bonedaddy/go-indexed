@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/bonedaddy/go-indexed/bindings/erc20"
+	"github.com/bonedaddy/go-indexed/bindings/multicall"
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -58,7 +58,7 @@ func BalanceOfDecimal(ip IndexPool, addr common.Address) (decimal.Decimal, error
 }
 
 // GetTotalValueLocked returns the total value locked into the contracts
-func (c *Client) GetTotalValueLocked(ip IndexPool, logger *zap.Logger) (float64, error) {
+func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logger *zap.Logger, poolAddress common.Address) (float64, error) {
 	tokens, err := c.PoolTokensFor(ip)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get pool tokens")
@@ -70,27 +70,36 @@ func (c *Client) GetTotalValueLocked(ip IndexPool, logger *zap.Logger) (float64,
 		tokenUsdValue float64        // the value of a single token
 		tokenAddress  common.Address // the address of the token contract
 	}
-
+	decimals := make(map[common.Address]uint8)
 	values := make(map[string]*tokenValue)
+
+	var tokenAddrs []common.Address
+	for _, addr := range tokens {
+		tokenAddrs = append(tokenAddrs, addr)
+	}
+
+	addrs, decs, err := mc.GetDecimals(nil, tokenAddrs)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get token decimals from multicall")
+	}
+
+	if len(addrs) != len(decs) {
+		return 0, errors.New("mismatching addr and dec lengths")
+	}
+
+	for i := 0; i < len(addrs); i++ {
+		decimals[addrs[i]] = decs[i]
+	}
 
 	for symbol, addr := range tokens {
 		// hard coded list for alternate price lookups of X->ETH->DAI
 		switch strings.ToLower(symbol) {
 		default:
-			erc, err := erc20.NewErc20(addr, c.ec)
-			if err != nil {
-				return 0, errors.Wrap(err, "failed to get erc20 contract")
-			}
-			dec, err := erc.Decimals(nil)
-			if err != nil {
-				return 0, errors.Wrap(err, "failed to get decimals")
-			}
-
-			tokenEthPrice, err := uc.GetExchangeAmount(utils.ToWei("1.0", int(dec)), addr, WETHTokenAddress)
+			tokenEthPrice, err := uc.GetExchangeAmount(utils.ToWei("1.0", int(decimals[addr])), addr, WETHTokenAddress)
 			if err != nil {
 				return 0, errors.Wrap(err, "failed to get exchange amount")
 			}
-			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(dec))
+			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(decimals[addr]))
 
 			ethDaiPrice, err := c.EthDaiPrice()
 			if err != nil {
@@ -110,23 +119,26 @@ func (c *Client) GetTotalValueLocked(ip IndexPool, logger *zap.Logger) (float64,
 			logger.Debug("usd value retrieve", zap.String("asset", symbol), zap.Float64("usd.value", values[symbol].tokenUsdValue))
 		}
 	}
+
+	balances := make(map[common.Address]*big.Int)
+
+	addrs, bals, err := mc.GetBalances(nil, poolAddress, tokenAddrs)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get pool token balances from multicall")
+	}
+
+	if len(addrs) != len(bals) {
+		return 0, errors.New("mismatching addr and bal lengths")
+	}
+
+	for i := 0; i < len(addrs); i++ {
+		balances[addrs[i]] = bals[i]
+	}
+
 	var totalValueUSD float64
 	for _, object := range values {
-		erc, err := erc20.NewErc20(object.tokenAddress, c.ec)
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to get erc20 contract")
-		}
-		dec, err := erc.Decimals(nil)
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to get decimals")
-		}
 
-		poolBalance, err := ip.GetBalance(nil, object.tokenAddress)
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to get pool token balance")
-		}
-
-		poolBalanceF, _ := utils.ToDecimal(poolBalance, int(dec)).Float64()
+		poolBalanceF, _ := utils.ToDecimal(balances[object.tokenAddress], int(decimals[object.tokenAddress])).Float64()
 		poolUSDValue := object.tokenUsdValue * poolBalanceF
 
 		totalValueUSD += poolUSDValue
