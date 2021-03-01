@@ -59,7 +59,7 @@ var (
 		InfuraAPIKey:      "INFURA-KEY",
 		InfuraWSEnabled:   false,
 		ETHRPCEndpoint:    "http://localhost:8545",
-		MulticallContract: "0x3067b1b7bf344027c7439509fbdf344eb25f5991", // NOTE: this is the multicall from the circuit breaker package and this needs to be updated
+		MulticallContract: "0xFB6FdE35dDD2cC295908b1E5EfAF36Effb5C04dD", // NOTE: this is the multicall from the circuit breaker package and this needs to be updated
 		Watchers: []Watcher{
 			{DiscordToken: "CHANGEME-TOKEN", Currency: "CHANGEME-CURRENCY"},
 		},

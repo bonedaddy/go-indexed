@@ -15,7 +15,7 @@ import (
 var (
 	// my personal address
 	myAddress        = common.HexToAddress("0x5a361A1dfd52538A158e352d21B5b622360a7C13")
-	multicallAddress = "0x3067b1b7bf344027c7439509fbdf344eb25f5991" // NOTE: this is the multicall from the circuit breaker package and this needs to be updated
+	multicallAddress = "0xFB6FdE35dDD2cC295908b1E5EfAF36Effb5C04dD" // NOTE: this is the multicall from the circuit breaker package and this needs to be updated
 )
 
 func doSetup(t *testing.T) *Client {

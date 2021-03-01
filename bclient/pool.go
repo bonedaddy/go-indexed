@@ -59,7 +59,7 @@ func BalanceOfDecimal(ip IndexPool, addr common.Address) (decimal.Decimal, error
 
 // GetTotalValueLocked returns the total value locked into the contracts
 func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logger *zap.Logger, poolAddress common.Address) (float64, error) {
-	tokens, err := c.PoolTokensFor(ip)
+	tokens, err := c.PoolTokensForMC(mc, poolAddress)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get pool tokens")
 	}
