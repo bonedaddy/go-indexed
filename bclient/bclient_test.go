@@ -140,7 +140,30 @@ func TestBClient(t *testing.T) {
 			}
 		})
 	})
+	t.Run("GetPoolAddress", func(t *testing.T) {
+		type args struct {
+			name string
+		}
+		tests := []struct {
+			name     string
+			args     args
+			wantAddr common.Address
+		}{
+			{"DEFI5", args{"DEFI5"}, DEFI5TokenAddress},
+			{"CC10", args{"CC10"}, CC10TokenAddress},
+			{"ORCL5", args{"ORCL5"}, ORCL5TokenAddress},
+			{"DEGEN10", args{"DEGEN10"}, DEGEN10TokenAddress},
+			{"DEGEN", args{"DEGEN"}, DEGEN10TokenAddress},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				addr, err := client.GetPoolAddress(tt.args.name)
+				require.NoError(t, err)
+				require.Equal(t, addr.String(), tt.wantAddr.String())
 
+			})
+		}
+	})
 }
 
 func TestStaking(t *testing.T) {

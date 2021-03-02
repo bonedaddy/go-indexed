@@ -17,17 +17,41 @@ func (c *Client) poolTokensHandler(ctx *dgc.Ctx) {
 
 	}
 	arguments := ctx.Arguments
-	poolName := arguments.Get(0).Raw()
-	ip, err := c.bc.GetIndexPool(poolName)
-	if err != nil {
-		ctx.RespondText("invalid pool")
-		return
+	poolName := strings.ToLower(arguments.Get(0).Raw())
+
+	var (
+		tokens map[string]common.Address
+		err    error
+	)
+	switch poolName {
+	case "cc10":
+		ip, err := c.bc.CC10()
+		if err != nil {
+			ctx.RespondText("failed to get cc10 contract binding")
+			c.logger.Error("failed to get cc10 contract binding", zap.Error(err))
+			return
+		}
+		tokens, err = c.bc.PoolTokensFor(ip)
+	default:
+		mc, err := c.bc.MultiCall(c.cfg.MulticallContract)
+		if err != nil {
+			ctx.RespondText("failed to get multicall contract")
+			c.logger.Error("failed to get multicall contract", zap.Error(err))
+			return
+		}
+		poolAddr, err := c.bc.GetPoolAddress(poolName)
+		if err != nil {
+			ctx.RespondText("failed to get pool address")
+			return
+		}
+		tokens, err = c.bc.PoolTokensForMC(mc, poolAddr)
 	}
-	tokens, err := c.bc.PoolTokensFor(ip)
 	if err != nil {
 		ctx.RespondText("failed to lookup current tokens")
+		c.logger.Error("failed to lookup current pool tokens", zap.Error(err))
 		return
 	}
+
 	tokensEmbed := BaseEmbed()
 	tokensEmbed.Title = fmt.Sprintf("%s Current Pool Tokens", strings.ToUpper(poolName))
 

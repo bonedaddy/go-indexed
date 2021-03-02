@@ -34,6 +34,8 @@ type Client struct {
 	wg     *sync.WaitGroup
 
 	logger *zap.Logger
+
+	cfg *config.Config
 }
 
 func init() {
@@ -74,7 +76,7 @@ func NewClient(ctx context.Context, cfg *config.Config, bc *bclient.Client, db *
 		},
 	})
 
-	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg, db: db}
+	client := &Client{s: dg, bc: bc, r: router, ctx: ctx, cancel: cancel, wg: wg, db: db, cfg: cfg}
 
 	// register our custom help command
 	registerHelpCommand(dg, nil, router)
