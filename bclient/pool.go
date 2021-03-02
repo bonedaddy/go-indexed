@@ -59,9 +59,20 @@ func BalanceOfDecimal(ip IndexPool, addr common.Address) (decimal.Decimal, error
 
 // GetTotalValueLocked returns the total value locked into the contracts
 func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logger *zap.Logger, poolAddress common.Address) (float64, error) {
-	tokens, err := c.PoolTokensForMC(mc, poolAddress)
+	// handle edge cases where some index pools may not be able to use the multicall contract
+	// CC10 is an example of this as it contains the MKR token which does not properly respect ERC20 standards when it comes to supplies
+	var (
+		tokens map[string]common.Address
+		err    error
+	)
+	switch poolAddress {
+	case CC10TokenAddress:
+		tokens, err = c.PoolTokensFor(ip)
+	default:
+		tokens, err = c.PoolTokensForMC(mc, poolAddress)
+	}
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to get pool tokens")
+		return 0, errors.Wrap(err, "failed to get current tokens")
 	}
 
 	uc := c.Uniswap()

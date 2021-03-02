@@ -337,20 +337,30 @@ func main() {
 }
 
 func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database, logger *zap.Logger, cfg *config.Config, mc *multicall.Multicall) {
-	ticker := time.NewTicker(time.Second * 240) // update every 4m
+	ticker := time.NewTicker(time.Second * 60) // update every 1m
 	defer ticker.Stop()
-	// update TVL every 35 minutes
-	tvlTicker := time.NewTicker(time.Minute * 35)
+	// update TVL every 20m
+	tvlTicker := time.NewTicker(time.Minute * 20)
 	defer tvlTicker.Stop()
 	// do an initial update
 	processUpdates(bc, db, logger, mc, cfg.Indices)
-
+	for _, indice := range cfg.Indices {
+		if err := updateTVL(bc, mc, logger, db, strings.ToLower(indice)); err != nil {
+			logger.Error("failed to udpate tvl", zap.Error(err))
+		}
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
 			processUpdates(bc, db, logger, mc, cfg.Indices)
+		case <-tvlTicker.C:
+			for _, indice := range cfg.Indices {
+				if err := updateTVL(bc, mc, logger, db, strings.ToLower(indice)); err != nil {
+					logger.Error("failed to udpate tvl", zap.Error(err))
+				}
+			}
 		}
 	}
 
@@ -363,11 +373,13 @@ func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger,
 		curr := strings.ToLower(indice)
 		ip, err := bc.GetIndexPool(curr)
 		if err != nil {
-			break
+			logger.Error("failed to get index pool", zap.Error(err))
+			continue
 		}
-		supply, price, tvl, err := getValues(bc, ip, mc, logger, curr)
-		if err := db.RecordValueLocked(curr, tvl); err != nil {
-			logger.Error("failed to record value locked", zap.Error(err), zap.String("indice", indice))
+		supply, price, err := getValues(bc, ip, mc, logger, curr)
+		if err != nil {
+			logger.Error("failed to get values", zap.String("index.name", indice), zap.Error(err))
+			continue
 		}
 		if err := db.RecordPrice(curr, price); err != nil {
 			logger.Error("failed to record price", zap.Error(err), zap.String("indice", indice))
@@ -378,24 +390,38 @@ func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger,
 	}
 }
 
-func getValues(bc *bclient.Client, ip bclient.IndexPool, mc *multicall.Multicall, logger *zap.Logger, name string) (totalSupply, price, tvl float64, err error) {
+func updateTVL(bc *bclient.Client, mc *multicall.Multicall, logger *zap.Logger, db *db.Database, name string) error {
+	ip, err := bc.GetIndexPool(name)
+	if err != nil {
+		logger.Error("failed to get index pool", zap.Error(err))
+		return err
+	}
+	poolAddress := getPoolAddress(strings.ToLower(name))
+	tvl, err := bc.GetTotalValueLocked(ip, mc, logger, poolAddress)
+	if err != nil {
+		logger.Error("failed to get total value locked", zap.Error(err))
+		return nil
+	}
+	err = db.RecordValueLocked(strings.ToLower(name), tvl)
+	if err != nil {
+		logger.Error("failed to record total value locked", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func getValues(bc *bclient.Client, ip bclient.IndexPool, mc *multicall.Multicall, logger *zap.Logger, name string) (totalSupply, price float64, err error) {
 	totalSupply, err = getTotalSupply(ip)
-	var poolAddress common.Address
 	switch name {
 	case "defi5":
-		poolAddress = bclient.DEFI5TokenAddress
 		price, err = bc.Defi5DaiPrice()
 	case "cc10":
-		poolAddress = bclient.CC10TokenAddress
 		price, err = bc.Cc10DaiPrice()
 	case "orcl5":
-		poolAddress = bclient.ORCL5TokenAddress
 		price, err = bc.Orcl5DaiPrice()
 	case "degen10":
-		poolAddress = bclient.DEGEN10TokenAddress
 		price, err = bc.Degen10DaiPrice()
 	}
-	tvl, err = bc.GetTotalValueLocked(ip, mc, logger, poolAddress)
 	return
 }
 
@@ -409,9 +435,9 @@ func getTotalSupply(erc bclient.ERC20I) (float64, error) {
 }
 
 func processUpdates(bc *bclient.Client, db *db.Database, logger *zap.Logger, mc *multicall.Multicall, indices []string) {
-	// do an initial update
+	// index specific updates
 	handleIndexUpdates(db, bc, logger, mc, indices)
-	// update eth price seperately as it requires special handling
+	// update remaining information (ndx supply + price, eth price)
 	priceBig, err := bc.EthDaiPrice()
 	if err != nil {
 		logger.Error("failed to get eth dai price", zap.Error(err))
@@ -446,4 +472,18 @@ func processUpdates(bc *bclient.Client, db *db.Database, logger *zap.Logger, mc 
 		}
 	}
 
+}
+
+func getPoolAddress(indice string) (poolAddress common.Address) {
+	switch indice {
+	case "defi5":
+		poolAddress = bclient.DEFI5TokenAddress
+	case "cc10":
+		poolAddress = bclient.CC10TokenAddress
+	case "orcl5":
+		poolAddress = bclient.ORCL5TokenAddress
+	case "degen10":
+		poolAddress = bclient.DEGEN10TokenAddress
+	}
+	return
 }
