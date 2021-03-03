@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bonedaddy/go-indexed/bindings/multicall"
 	"github.com/bonedaddy/go-indexed/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,8 @@ import (
 
 var (
 	// my personal address
-	myAddress = common.HexToAddress("0x5a361A1dfd52538A158e352d21B5b622360a7C13")
+	myAddress        = common.HexToAddress("0x5a361A1dfd52538A158e352d21B5b622360a7C13")
+	multicallAddress = "0xFB6FdE35dDD2cC295908b1E5EfAF36Effb5C04dD" // NOTE: this is the multicall from the circuit breaker package and this needs to be updated
 )
 
 func doSetup(t *testing.T) *Client {
@@ -32,7 +34,8 @@ func TestBClient(t *testing.T) {
 	t.Cleanup(func() {
 		client.Close()
 	})
-	_ = client.EthClient()
+	mc, err := multicall.NewMulticall(common.HexToAddress(multicallAddress), client.EthClient())
+	require.NoError(t, err)
 	t.Run("Misc", func(t *testing.T) {
 		_, err := client.CurrentBlock()
 		require.NoError(t, err)
@@ -44,7 +47,7 @@ func TestBClient(t *testing.T) {
 		cc10, err := client.CC10()
 		require.NoError(t, err)
 
-		tvl, err := client.GetTotalValueLocked(cc10, zap.NewNop())
+		tvl, err := client.GetTotalValueLocked(cc10, mc, zap.NewNop(), CC10TokenAddress)
 		require.NoError(t, err)
 		t.Log("total value locked: ", tvl)
 
@@ -92,7 +95,7 @@ func TestBClient(t *testing.T) {
 		defi5, err := client.DEFI5()
 		require.NoError(t, err)
 
-		tvl, err := client.GetTotalValueLocked(defi5, zap.NewNop())
+		tvl, err := client.GetTotalValueLocked(defi5, mc, zap.NewNop(), DEFI5TokenAddress)
 		require.NoError(t, err)
 		t.Log("total value locked: ", tvl)
 
@@ -137,7 +140,30 @@ func TestBClient(t *testing.T) {
 			}
 		})
 	})
+	t.Run("GetPoolAddress", func(t *testing.T) {
+		type args struct {
+			name string
+		}
+		tests := []struct {
+			name     string
+			args     args
+			wantAddr common.Address
+		}{
+			{"DEFI5", args{"DEFI5"}, DEFI5TokenAddress},
+			{"CC10", args{"CC10"}, CC10TokenAddress},
+			{"ORCL5", args{"ORCL5"}, ORCL5TokenAddress},
+			{"DEGEN10", args{"DEGEN10"}, DEGEN10TokenAddress},
+			{"DEGEN", args{"DEGEN"}, DEGEN10TokenAddress},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				addr, err := client.GetPoolAddress(tt.args.name)
+				require.NoError(t, err)
+				require.Equal(t, addr.String(), tt.wantAddr.String())
 
+			})
+		}
+	})
 }
 
 func TestStaking(t *testing.T) {
