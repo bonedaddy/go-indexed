@@ -421,6 +421,8 @@ func getValues(bc *bclient.Client, ip bclient.IndexPool, mc *multicall.Multicall
 		price, err = bc.Orcl5DaiPrice()
 	case "degen10":
 		price, err = bc.Degen10DaiPrice()
+	case "nftp":
+		price, err = bc.NftpDaiPrice()
 	}
 	return
 }
@@ -484,6 +486,8 @@ func getPoolAddress(indice string) (poolAddress common.Address) {
 		poolAddress = bclient.ORCL5TokenAddress
 	case "degen10":
 		poolAddress = bclient.DEGEN10TokenAddress
+	case "nftp":
+		poolAddress = bclient.NFTPTokenAddress
 	}
 	return
 }

@@ -120,6 +120,24 @@ func (c *Client) Degen10DaiPrice() (float64, error) {
 	return edF * oeF, nil
 }
 
+func (c *Client) NftpDaiPrice() (float64, error) {
+	nftpEthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "nftp-eth")
+	if err != nil {
+		return 0, err
+	}
+	nftpEthPriceDec := utils.ToDecimal(nftpEthPrice, 18)
+	ethDaiPrice, err := c.EthDaiPrice()
+	if err != nil {
+		return 0, err
+	}
+	ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+	// derive the price of NFTP by getting the amount of ETH you would get from
+	// 1 NFTP token, and converting that into DAI
+	edF, _ := ethDaiPriceDec.Float64()
+	oeF, _ := nftpEthPriceDec.Float64()
+	return edF * oeF, nil
+}
+
 // EthDaiPrice returns the price of ETH in terms of DAI
 func (c *Client) EthDaiPrice() (*big.Int, error) {
 	reserves, err := c.Reserves("eth-dai")
@@ -150,6 +168,10 @@ func (c *Client) Reserves(pair string) (*uniswap.Reserve, error) {
 		return c.uc.GetReserves(DEGEN10TokenAddress, WETHTokenAddress)
 	case "eth-degen10", "eth-degen":
 		return c.uc.GetReserves(WETHTokenAddress, DEGEN10TokenAddress)
+	case "nftp-eth":
+		return c.uc.GetReserves(NFTPTokenAddress, WETHTokenAddress)
+	case "eth-nftp":
+		return c.uc.GetReserves(WETHTokenAddress, NFTPTokenAddress)
 	default:
 		return nil, errors.New("unsupported pair")
 	}

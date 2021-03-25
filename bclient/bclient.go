@@ -74,6 +74,11 @@ func (c *Client) DEGEN10() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(DEGEN10TokenAddress, c.ec)
 }
 
+// NFTP returns a NFTP contract binding
+func (c *Client) NFTP() (IndexPool, error) {
+	return poolbindings.NewPoolbindings(NFTPTokenAddress, c.ec)
+}
+
 // MCAPControllerAt returns the marketcap square root controller bindings for an IndexPool
 func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontroller, error) {
 	cntrl, err := ip.GetController(nil)
