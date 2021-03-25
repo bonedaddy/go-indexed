@@ -393,18 +393,18 @@ func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger,
 func updateTVL(bc *bclient.Client, mc *multicall.Multicall, logger *zap.Logger, db *db.Database, name string) error {
 	ip, err := bc.GetIndexPool(name)
 	if err != nil {
-		logger.Error("failed to get index pool", zap.Error(err))
+		logger.Error("failed to get index pool", zap.Error(err), zap.String("pool", name))
 		return err
 	}
 	poolAddress := getPoolAddress(strings.ToLower(name))
 	tvl, err := bc.GetTotalValueLocked(ip, mc, logger, poolAddress)
 	if err != nil {
-		logger.Error("failed to get total value locked", zap.Error(err))
+		logger.Error("failed to get total value locked", zap.Error(err), zap.String("pool", name))
 		return nil
 	}
 	err = db.RecordValueLocked(strings.ToLower(name), tvl)
 	if err != nil {
-		logger.Error("failed to record total value locked", zap.Error(err))
+		logger.Error("failed to record total value locked", zap.Error(err), zap.String("pool", name))
 		return err
 	}
 	return nil
