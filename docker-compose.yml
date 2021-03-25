@@ -1,7 +1,7 @@
 version: "3.5"
 services:
   ndx-bot:
-    image: bonedaddy/gondx:v0.0.17-rc1-2-gfe8d0e5
+    image: bonedaddy/gondx:v0.0.23
     command: "--startup.sleep discord ndx-bot"
     depends_on:
       - chain-updater
@@ -12,7 +12,7 @@ services:
     volumes: 
       - ./config.yml:/config.yml
   chain-updater:
-    image: bonedaddy/gondx:v0.0.17-rc1-2-gfe8d0e5
+    image: bonedaddy/gondx:v0.0.23
     command: "--startup.sleep discord db chain-updater"
     depends_on:
       - postgres

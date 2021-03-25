@@ -257,6 +257,13 @@ func NewClient(ctx context.Context, cfg *config.Config, bc *bclient.Client, db *
 			ctx.RespondText("invalid invocation please run a specific subcommand")
 		},
 	})
+	router.RegisterCmd(&dgc.Command{
+		Name:        "contracts",
+		Description: "returns information about indexed finance contracts, an empty filter returns all contracts",
+		Usage:       " contracts <filter>",
+		Example:     " contracts\n!ndx contracts all\n!ndx contracts staking\n!ndx contracts list-filters",
+		Handler:     client.listContracts,
+	})
 	router.Initialize(dg)
 	logger.Info("bot started")
 	return client, nil
