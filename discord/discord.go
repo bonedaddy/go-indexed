@@ -490,6 +490,17 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "degen10"))
 				continue
 			}
+		case "nftp":
+			price, err = database.LastPrice("nftp")
+			if err != nil {
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "nftp"))
+				continue
+			}
+			tvl, err = database.LastValueLocked("nftp")
+			if err != nil {
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "nftp"))
+				continue
+			}
 		case "ndx":
 			price, err = database.LastPrice("ndx")
 			if err != nil {
