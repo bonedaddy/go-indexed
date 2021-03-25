@@ -346,7 +346,7 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database,
 	processUpdates(bc, db, logger, mc, cfg.Indices)
 	for _, indice := range cfg.Indices {
 		if err := updateTVL(bc, mc, logger, db, strings.ToLower(indice)); err != nil {
-			logger.Error("failed to udpate tvl", zap.Error(err))
+			logger.Error("failed to udpate tvl", zap.Error(err), zap.String("pool", indice))
 		}
 	}
 	for {
@@ -358,7 +358,7 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database,
 		case <-tvlTicker.C:
 			for _, indice := range cfg.Indices {
 				if err := updateTVL(bc, mc, logger, db, strings.ToLower(indice)); err != nil {
-					logger.Error("failed to udpate tvl", zap.Error(err))
+					logger.Error("failed to udpate tvl", zap.Error(err), zap.String("pool", indice))
 				}
 			}
 		}

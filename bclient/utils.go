@@ -18,6 +18,8 @@ func (bc *Client) GetIndexPool(name string) (IndexPool, error) {
 		return bc.ORCL5()
 	case "degen10", "degen":
 		return bc.DEGEN10()
+	case "nftp":
+		return bc.NFTP()
 	default:
 		return nil, errors.New("invalid pool name")
 	}
