@@ -200,6 +200,10 @@ func (c *Client) ExchangeAmount(amount *big.Int, pair string) (*big.Int, error) 
 		return c.uc.GetExchangeAmount(amount, DEGEN10TokenAddress, WETHTokenAddress)
 	case "eth-degen10", "eth-degen":
 		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, DEGEN10TokenAddress)
+	case "nftp-eth":
+		return c.uc.GetExchangeAmount(amount, NFTPTokenAddress, WETHTokenAddress)
+	case "eth-nftp":
+		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, NFTPTokenAddress)
 	default:
 		return nil, errors.New("unsupported pair")
 	}
