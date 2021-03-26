@@ -36,6 +36,8 @@ func (bc *Client) GetPoolAddress(name string) (common.Address, error) {
 		return ORCL5TokenAddress, nil
 	case "degen10", "degen":
 		return DEGEN10TokenAddress, nil
+	case "nftp":
+		return NFTPTokenAddress, nil
 	default:
 		return common.Address{}, errors.New("invalid pool name")
 	}
