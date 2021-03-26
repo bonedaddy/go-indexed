@@ -232,6 +232,10 @@ func (c *Client) PairDecimals(pair string) int {
 		return 18
 	case "eth-degen10", "eth-degen":
 		return 18
+	case "nftp-eth":
+		return 18
+	case "eth-nftp":
+		return 18
 	default:
 		return 0
 	}
