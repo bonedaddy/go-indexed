@@ -110,7 +110,12 @@ func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logg
 			if err != nil {
 				return 0, errors.Wrap(err, "failed to get exchange amount")
 			}
-			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(decimals[addr]))
+			// we should be able to just handle decimals of 18 here and not worry
+			// about the commented out code, i think this is the case because we are calculating
+			// price of the uniswal pair which is 18
+			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, 18)
+			// todo(bonedaddy): may need to reconsider handling this
+			// tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(decimals[addr]))
 
 			ethDaiPrice, err := c.EthDaiPrice()
 			if err != nil {
