@@ -79,6 +79,11 @@ func (c *Client) NFTP() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(NFTPTokenAddress, c.ec)
 }
 
+// ERROR returns an ERROR contract binding
+func (c *Client) ERROR() (IndexPool, error) {
+	return poolbindings.NewPoolbindings(ERRORTokenAddress, c.ec)
+}
+
 // MCAPControllerAt returns the marketcap square root controller bindings for an IndexPool
 func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontroller, error) {
 	cntrl, err := ip.GetController(nil)
