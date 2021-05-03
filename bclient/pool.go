@@ -66,7 +66,7 @@ func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logg
 		err    error
 	)
 	switch poolAddress {
-	case CC10TokenAddress:
+	case CC10TokenAddress, DEFI5TokenAddress:
 		tokens, err = c.PoolTokensFor(ip)
 	default:
 		tokens, err = c.PoolTokensForMC(mc, poolAddress)
