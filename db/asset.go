@@ -24,6 +24,7 @@ var (
 		Asset("DEGEN10"),
 		Asset("NFTP"),
 		Asset("ERROR"),
+		Asset("FFF"),
 	}
 	// ErrInvalidAsset is an error returned when the given asset specified is invalid
 	ErrInvalidAsset = errors.New("invalid asset")
@@ -32,7 +33,7 @@ var (
 // IsValidAsset determines whether or not the given asset is one we are tracking
 func IsValidAsset(asset string) bool {
 	switch strings.ToLower(asset) {
-	case "ndx", "defi5", "cc10", "orcl5", "eth", "degen10", "nftp", "error":
+	case "ndx", "defi5", "cc10", "orcl5", "eth", "degen10", "nftp", "error", "fff":
 		return true
 	default:
 		return false

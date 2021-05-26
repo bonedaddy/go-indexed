@@ -309,6 +309,10 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 				if err != nil {
 					logger.Error("fialed to get tvl", zap.Error(err), zap.String("asset", "error"))
 				}
+				fffTVL, err := db.LastValueLocked("fff")
+				if err != nil {
+					logger.Error("failed to get tvl", zap.Error(err), zap.String("asset", "fff"))
+				}
 				price, err := db.LastPrice("ndx")
 				if err != nil {
 					logger.Error("failed to get price", zap.Error(err), zap.String("asset", "ndx"))
@@ -321,7 +325,7 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 				}
 				update := fmt.Sprintf("NDXBot: $%0.2f", price)
 				// todo(bonedaddy): uncomment when error fund is live
-				parsed := ParseValue(defi5TVL + cc10TVL + orcl5TVL + degen10TVL + nftpTVL + errorTVL)
+				parsed := ParseValue(defi5TVL + cc10TVL + orcl5TVL + degen10TVL + nftpTVL + errorTVL + fffTVL)
 				for _, guild := range guilds {
 					bot.GuildMemberNickname(guild.ID, "@me", update)
 					bot.UpdateStatus(0, parsed+" TVL")
@@ -520,6 +524,17 @@ func launchSingleWatcherBot(ctx context.Context, bot *discordgo.Session, bc *bcl
 			tvl, err = database.LastValueLocked("error")
 			if err != nil {
 				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "error"))
+				continue
+			}
+		case "fff":
+			price, err = database.LastPrice("fff")
+			if err != nil {
+				logger.Error("failed to get dai price", zap.Error(err), zap.String("asset", "fff"))
+				continue
+			}
+			tvl, err = database.LastValueLocked("fff")
+			if err != nil {
+				logger.Error("failed to get tvl price", zap.Error(err), zap.String("asset", "fff"))
 				continue
 			}
 		case "ndx":

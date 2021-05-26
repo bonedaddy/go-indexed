@@ -114,6 +114,14 @@ func (c *Client) uniswapExchangeRateHandler(ctx *dgc.Ctx) {
 			return
 		}
 		ctx.RespondText(fmt.Sprintf("ERROR-DAI exchange rate: %0.2f", price))
+	case "fff-dai":
+		price, err := c.db.LastPrice("fff")
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			c.logger.Error("failed to fetch dai price", zap.Error(err), zap.String("asset", "fff"))
+			return
+		}
+		ctx.RespondText(fmt.Sprintf("FFF-DAI exchange rate: %0.2f", price))
 	default:
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai, orcl5-dai, degen10-dai, degen-dai")
 		return
@@ -245,6 +253,20 @@ func (c *Client) uniswapPercentChangeHandler(ctx *dgc.Ctx) {
 			changed = "increased"
 		}
 		ctx.RespondText(fmt.Sprintf("ERROR-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
+	case "fff", "fff-dai":
+		price, err := c.db.PriceChangeInRange("fff", window)
+		if err != nil {
+			ctx.RespondText("failed to get price")
+			c.logger.Error("failed to calculate price change", zap.Error(err), zap.String("asset", "fff"))
+			return
+		}
+		var changed string
+		if (price * 100) < 0 {
+			changed = "decreased"
+		} else {
+			changed = "increased"
+		}
+		ctx.RespondText(fmt.Sprintf("FFF-DAI price has %s %0.2f%% over the last %v days", changed, math.Abs(price*100), window))
 	default:
 		ctx.RespondText("invalid currency requested must be one of: defi5-dai, cc10-dai, eth-dai, ndx-dai, orcl5-dai")
 		return

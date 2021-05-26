@@ -84,6 +84,11 @@ func (c *Client) ERROR() (IndexPool, error) {
 	return poolbindings.NewPoolbindings(ERRORTokenAddress, c.ec)
 }
 
+// FFF returns an FFF contract binding
+func (c *Client) FFF() (IndexPool, error) {
+	return poolbindings.NewPoolbindings(FFFTokenAddress, c.ec)
+}
+
 // MCAPControllerAt returns the marketcap square root controller bindings for an IndexPool
 func (c *Client) MCAPControllerAt(ip IndexPool) (*mcapscontroller.Mcapscontroller, error) {
 	cntrl, err := ip.GetController(nil)

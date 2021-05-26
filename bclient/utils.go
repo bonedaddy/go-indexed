@@ -22,6 +22,8 @@ func (bc *Client) GetIndexPool(name string) (IndexPool, error) {
 		return bc.NFTP()
 	case "error":
 		return bc.ERROR()
+	case "fff":
+		return bc.FFF()
 	default:
 		return nil, errors.New("invalid pool name")
 	}
@@ -42,6 +44,8 @@ func (bc *Client) GetPoolAddress(name string) (common.Address, error) {
 		return NFTPTokenAddress, nil
 	case "error":
 		return ERRORTokenAddress, nil
+	case "fff":
+		return FFFTokenAddress, nil
 	default:
 		return common.Address{}, errors.New("invalid pool name")
 	}
