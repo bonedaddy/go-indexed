@@ -346,7 +346,7 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database,
 	processUpdates(bc, db, logger, mc, cfg.Indices)
 	for _, indice := range cfg.Indices {
 		if err := updateTVL(bc, mc, logger, db, strings.ToLower(indice)); err != nil {
-			logger.Error("failed to udpate tvl", zap.Error(err))
+			logger.Error("failed to udpate tvl", zap.Error(err), zap.String("pool", indice))
 		}
 	}
 	for {
@@ -358,7 +358,7 @@ func dbPriceUpdateLoop(ctx context.Context, bc *bclient.Client, db *db.Database,
 		case <-tvlTicker.C:
 			for _, indice := range cfg.Indices {
 				if err := updateTVL(bc, mc, logger, db, strings.ToLower(indice)); err != nil {
-					logger.Error("failed to udpate tvl", zap.Error(err))
+					logger.Error("failed to udpate tvl", zap.Error(err), zap.String("pool", indice))
 				}
 			}
 		}
@@ -393,18 +393,18 @@ func handleIndexUpdates(db *db.Database, bc *bclient.Client, logger *zap.Logger,
 func updateTVL(bc *bclient.Client, mc *multicall.Multicall, logger *zap.Logger, db *db.Database, name string) error {
 	ip, err := bc.GetIndexPool(name)
 	if err != nil {
-		logger.Error("failed to get index pool", zap.Error(err))
+		logger.Error("failed to get index pool", zap.Error(err), zap.String("pool", name))
 		return err
 	}
 	poolAddress := getPoolAddress(strings.ToLower(name))
 	tvl, err := bc.GetTotalValueLocked(ip, mc, logger, poolAddress)
 	if err != nil {
-		logger.Error("failed to get total value locked", zap.Error(err))
+		logger.Error("failed to get total value locked", zap.Error(err), zap.String("pool", name))
 		return nil
 	}
 	err = db.RecordValueLocked(strings.ToLower(name), tvl)
 	if err != nil {
-		logger.Error("failed to record total value locked", zap.Error(err))
+		logger.Error("failed to record total value locked", zap.Error(err), zap.String("pool", name))
 		return err
 	}
 	return nil
@@ -419,8 +419,14 @@ func getValues(bc *bclient.Client, ip bclient.IndexPool, mc *multicall.Multicall
 		price, err = bc.Cc10DaiPrice()
 	case "orcl5":
 		price, err = bc.Orcl5DaiPrice()
-	case "degen10":
+	case "degen10", "degen":
 		price, err = bc.Degen10DaiPrice()
+	case "nftp":
+		price, err = bc.NftpDaiPrice()
+	case "error":
+		price, err = bc.ErrorDaiPrice()
+	case "fff":
+		price, err = bc.FffDaiPrice()
 	}
 	return
 }
@@ -484,6 +490,12 @@ func getPoolAddress(indice string) (poolAddress common.Address) {
 		poolAddress = bclient.ORCL5TokenAddress
 	case "degen10":
 		poolAddress = bclient.DEGEN10TokenAddress
+	case "nftp":
+		poolAddress = bclient.NFTPTokenAddress
+	case "error":
+		poolAddress = bclient.ERRORTokenAddress
+	case "fff":
+		poolAddress = bclient.FFFTokenAddress
 	}
 	return
 }

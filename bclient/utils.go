@@ -18,6 +18,12 @@ func (bc *Client) GetIndexPool(name string) (IndexPool, error) {
 		return bc.ORCL5()
 	case "degen10", "degen":
 		return bc.DEGEN10()
+	case "nftp":
+		return bc.NFTP()
+	case "error":
+		return bc.ERROR()
+	case "fff":
+		return bc.FFF()
 	default:
 		return nil, errors.New("invalid pool name")
 	}
@@ -34,6 +40,12 @@ func (bc *Client) GetPoolAddress(name string) (common.Address, error) {
 		return ORCL5TokenAddress, nil
 	case "degen10", "degen":
 		return DEGEN10TokenAddress, nil
+	case "nftp":
+		return NFTPTokenAddress, nil
+	case "error":
+		return ERRORTokenAddress, nil
+	case "fff":
+		return FFFTokenAddress, nil
 	default:
 		return common.Address{}, errors.New("invalid pool name")
 	}

@@ -120,6 +120,60 @@ func (c *Client) Degen10DaiPrice() (float64, error) {
 	return edF * oeF, nil
 }
 
+func (c *Client) NftpDaiPrice() (float64, error) {
+	nftpEthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "nftp-eth")
+	if err != nil {
+		return 0, err
+	}
+	nftpEthPriceDec := utils.ToDecimal(nftpEthPrice, 18)
+	ethDaiPrice, err := c.EthDaiPrice()
+	if err != nil {
+		return 0, err
+	}
+	ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+	// derive the price of NFTP by getting the amount of ETH you would get from
+	// 1 NFTP token, and converting that into DAI
+	edF, _ := ethDaiPriceDec.Float64()
+	oeF, _ := nftpEthPriceDec.Float64()
+	return edF * oeF, nil
+}
+
+func (c *Client) ErrorDaiPrice() (float64, error) {
+	errorEthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "error-eth")
+	if err != nil {
+		return 0, err
+	}
+	errorEthPriceDec := utils.ToDecimal(errorEthPrice, 18)
+	ethDaiPrice, err := c.EthDaiPrice()
+	if err != nil {
+		return 0, err
+	}
+	ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+	// derive the price of ERROR by getting the amount of ETH you would get from
+	// 1 ERROR token, and converting that into DAI
+	edF, _ := ethDaiPriceDec.Float64()
+	oeF, _ := errorEthPriceDec.Float64()
+	return edF * oeF, nil
+}
+
+func (c *Client) FffDaiPrice() (float64, error) {
+	fffEthPrice, err := c.ExchangeAmount(utils.ToWei("1.0", 18), "fff-eth")
+	if err != nil {
+		return 0, err
+	}
+	fffEthPriceDec := utils.ToDecimal(fffEthPrice, 18)
+	ethDaiPrice, err := c.EthDaiPrice()
+	if err != nil {
+		return 0, err
+	}
+	ethDaiPriceDec := utils.ToDecimal(utils.ToWei(ethDaiPrice.Int64(), 18), 18)
+	// derive the price of FFF by getting the amount of ETH you would get from
+	// 1 ERROR token, and converting that into DAI
+	edF, _ := ethDaiPriceDec.Float64()
+	oeF, _ := fffEthPriceDec.Float64()
+	return edF * oeF, nil
+}
+
 // EthDaiPrice returns the price of ETH in terms of DAI
 func (c *Client) EthDaiPrice() (*big.Int, error) {
 	reserves, err := c.Reserves("eth-dai")
@@ -150,6 +204,18 @@ func (c *Client) Reserves(pair string) (*uniswap.Reserve, error) {
 		return c.uc.GetReserves(DEGEN10TokenAddress, WETHTokenAddress)
 	case "eth-degen10", "eth-degen":
 		return c.uc.GetReserves(WETHTokenAddress, DEGEN10TokenAddress)
+	case "nftp-eth":
+		return c.uc.GetReserves(NFTPTokenAddress, WETHTokenAddress)
+	case "eth-nftp":
+		return c.uc.GetReserves(WETHTokenAddress, NFTPTokenAddress)
+	case "error-eth":
+		return c.uc.GetReserves(ERRORTokenAddress, WETHTokenAddress)
+	case "eth-error":
+		return c.uc.GetReserves(WETHTokenAddress, ERRORTokenAddress)
+	case "fff-eth":
+		return c.uc.GetReserves(FFFTokenAddress, WETHTokenAddress)
+	case "eth-fff":
+		return c.uc.GetReserves(WETHTokenAddress, FFFTokenAddress)
 	default:
 		return nil, errors.New("unsupported pair")
 	}
@@ -178,6 +244,18 @@ func (c *Client) ExchangeAmount(amount *big.Int, pair string) (*big.Int, error) 
 		return c.uc.GetExchangeAmount(amount, DEGEN10TokenAddress, WETHTokenAddress)
 	case "eth-degen10", "eth-degen":
 		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, DEGEN10TokenAddress)
+	case "nftp-eth":
+		return c.uc.GetExchangeAmount(amount, NFTPTokenAddress, WETHTokenAddress)
+	case "eth-nftp":
+		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, NFTPTokenAddress)
+	case "error-eth":
+		return c.uc.GetExchangeAmount(amount, ERRORTokenAddress, WETHTokenAddress)
+	case "eth-error":
+		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, ERRORTokenAddress)
+	case "fff-eth":
+		return c.uc.GetExchangeAmount(amount, FFFTokenAddress, WETHTokenAddress)
+	case "eth-fff":
+		return c.uc.GetExchangeAmount(amount, WETHTokenAddress, FFFTokenAddress)
 	default:
 		return nil, errors.New("unsupported pair")
 	}
@@ -205,6 +283,18 @@ func (c *Client) PairDecimals(pair string) int {
 	case "degen10-eth", "degen-eth":
 		return 18
 	case "eth-degen10", "eth-degen":
+		return 18
+	case "nftp-eth":
+		return 18
+	case "eth-nftp":
+		return 18
+	case "error-eth":
+		return 18
+	case "eth-error":
+		return 18
+	case "fff-eth":
+		return 18
+	case "eth-fff":
 		return 18
 	default:
 		return 0
