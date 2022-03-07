@@ -66,7 +66,7 @@ func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logg
 		err    error
 	)
 	switch poolAddress {
-	case CC10TokenAddress:
+	case CC10TokenAddress, DEFI5TokenAddress:
 		tokens, err = c.PoolTokensFor(ip)
 	default:
 		tokens, err = c.PoolTokensForMC(mc, poolAddress)
@@ -105,12 +105,32 @@ func (c *Client) GetTotalValueLocked(ip IndexPool, mc *multicall.Multicall, logg
 	for symbol, addr := range tokens {
 		// hard coded list for alternate price lookups of X->ETH->DAI
 		switch strings.ToLower(symbol) {
+		// weth needs special handling to do a direct WETH->DAI price lookup
+		case "weth":
+			ethDaiPrice, err := c.EthDaiPrice()
+			if err != nil {
+				logger.Error("failed to get eth dai price")
+				return 0, errors.Wrap(err, "failed to get exchange amount")
+			}
+			ethDaiPriceDec, _ := utils.ToDecimal(ethDaiPrice, 0).Float64()
+			logger.Info("found eth dai price", zap.Float64("dec", ethDaiPriceDec), zap.String("str", ethDaiPrice.String()))
+			values[symbol] = &tokenValue{
+				tokenUsdValue: ethDaiPriceDec,
+				tokenAddress:  addr,
+			}
+			logger.Debug("usd value retrieve", zap.String("asset", symbol), zap.Float64("usd.value", values[symbol].tokenUsdValue))
 		default:
 			tokenEthPrice, err := uc.GetExchangeAmount(utils.ToWei("1.0", int(decimals[addr])), addr, WETHTokenAddress)
 			if err != nil {
+				logger.Error("failed to get exchange amount", zap.Int("decimals", int(decimals[addr])), zap.String("addr", addr.String()), zap.String("symbol", symbol))
 				return 0, errors.Wrap(err, "failed to get exchange amount")
 			}
-			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(decimals[addr]))
+			// we should be able to just handle decimals of 18 here and not worry
+			// about the commented out code, i think this is the case because we are calculating
+			// price of the uniswal pair which is 18
+			tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, 18)
+			// todo(bonedaddy): may need to reconsider handling this
+			// tokenEthPriceDec := utils.ToDecimal(tokenEthPrice, int(decimals[addr]))
 
 			ethDaiPrice, err := c.EthDaiPrice()
 			if err != nil {
