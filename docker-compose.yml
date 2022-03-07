@@ -1,8 +1,9 @@
 version: "3.5"
 services:
   ndx-bot:
-    image: bonedaddy/gondx:v0.0.17-rc1-2-gfe8d0e5
+    image: bonedaddy/gondx:v0.0.24-rc9-4-g358f641
     command: "--startup.sleep discord ndx-bot"
+    restart: always
     depends_on:
       - chain-updater
       - postgres
@@ -12,8 +13,9 @@ services:
     volumes: 
       - ./config.yml:/config.yml
   chain-updater:
-    image: bonedaddy/gondx:v0.0.17-rc1-2-gfe8d0e5
+    image: bonedaddy/gondx:v0.0.24-rc9-4-g358f641
     command: "--startup.sleep discord db chain-updater"
+    restart: always
     depends_on:
       - postgres
     networks:
@@ -24,17 +26,19 @@ services:
   postgres:
     image: postgres:10.12
     shm_size: 2gb
+    restart: always
     networks:
       privnet:
         ipv4_address: 172.16.238.4
     environment:
       POSTGRES_DB: "indexed"
       POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "password123"
+      POSTGRES_PASSWORD: "FIVEOrtASTERISKQuijTWO"
     volumes:
      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
   grafana:
-      image: grafana/grafana
+      image: grafana/grafana:latest
+      restart: always
       depends_on: 
           - postgres
       networks:
@@ -42,8 +46,12 @@ services:
           ipv4_address: 172.16.238.6
       ports:
           - 3001:3000
+          - 80:3000
       volumes:
           - ./grafana:/var/lib/grafana
+      environment:
+       GF_AUTH_ANONYMOUS_ENABLED: "true"
+       GF_AUTH_DISABLE_LOGIN_FORM: "false"
 networks:
  privnet:
   driver: bridge
