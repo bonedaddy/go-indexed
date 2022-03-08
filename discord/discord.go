@@ -280,7 +280,7 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				defi5TVL, err := db.LastValueLocked("defi5")
+				/*defi5TVL, err := db.LastValueLocked("defi5")
 				if err != nil {
 					logger.Error("failed to get tvl", zap.Error(err), zap.String("asset", "defi5"))
 					continue
@@ -312,7 +312,7 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 				fffTVL, err := db.LastValueLocked("fff")
 				if err != nil {
 					logger.Error("failed to get tvl", zap.Error(err), zap.String("asset", "fff"))
-				}
+				}*/
 				price, err := db.LastPrice("ndx")
 				if err != nil {
 					logger.Error("failed to get price", zap.Error(err), zap.String("asset", "ndx"))
@@ -325,10 +325,10 @@ func ndxPriceWatchRoutine(ctx context.Context, bot *discordgo.Session, wg *sync.
 				}
 				update := fmt.Sprintf("NDXBot: $%0.2f", price)
 				// todo(bonedaddy): uncomment when error fund is live
-				parsed := ParseValue(defi5TVL + cc10TVL + orcl5TVL + degen10TVL + nftpTVL + errorTVL + fffTVL)
+				//parsed := ParseValue(defi5TVL + cc10TVL + orcl5TVL + degen10TVL + nftpTVL + errorTVL + fffTVL)
 				for _, guild := range guilds {
 					bot.GuildMemberNickname(guild.ID, "@me", update)
-					bot.UpdateStatus(0, parsed+" TVL")
+					//bot.UpdateStatus(0, parsed+" TVL")
 				}
 			}
 		}

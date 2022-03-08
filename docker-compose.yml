@@ -27,6 +27,8 @@ services:
     image: postgres:10.12
     shm_size: 2gb
     restart: always
+    ports:
+      - 5432:5432
     networks:
       privnet:
         ipv4_address: 172.16.238.4
